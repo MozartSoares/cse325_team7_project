@@ -17,6 +17,22 @@ A system to manage parking lots, registering and authenticating users, logging t
 
 - Manage all parking lots
 - Access summaries, data, customers, and other information
+- Set dynamic pricing based on peak hours or duration
+- Generate reports of usage, revenue, and occupancy rates
+- Manage parking lot capacity and availability
+- Send notifications to users (e.g., when their parking time is about to expire)
+
+**User View:**
+
+- Register and authenticate accounts
+- Check-in/check-out at a parking lot
+- View parking history and payments
+- Receive notifications for expiring parking time or special promotions
+
+**Target Users:**
+
+- Parking lot owners and managers
+- Drivers seeking convenient parking solutions
 
 ---
 
@@ -26,18 +42,23 @@ A website catalogue for learning about and searching movies.
 
 **Key Features:**
 
-- Movie catalogue with information
-- Rating system
+- Movie catalogue with detailed information (genres, release year, cast, synopsis)
+- Rating and review system
 - Admin and user accounts
+- Search and filter movies by genre, rating, or release year
+- Favorite and watchlist management
 
 **Key Functionality:**
 
-- User accounts can search for movies, rate them, and favorite them
-- Admin accounts can edit movie data
+- Users can search for movies, rate them, add to favorites, and leave reviews
+- Admins can add, edit, or remove movies and manage user accounts
+- Trending movies or top-rated sections
+- Personalized recommendations based on user activity
 
 **Target Users:**
 
 - Movie enthusiasts
+- Casual users searching for movie information
 
 ---
 
@@ -47,11 +68,16 @@ A system to register items for a store or similar purposes.
 
 **Key Functionality:**
 
-- Admin authentication to register items
+- Admin authentication to register, edit, or remove items
+- Track inventory levels and item categories
+- Add images and descriptions for each item
+- Search and filter items by category, price, or availability
+- Option for users to request or purchase items (if extended to e-commerce)
 
 **Target Users:**
 
-- People who want to sell an item
+- Store owners or sellers
+- People looking to list items for sale
 
 ---
 
