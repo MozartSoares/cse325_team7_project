@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "wVr/mH/R+5c=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\hugog\\OneDrive\\Área de Trabalho\\cse325_team7_project\\MovieHub7\\MovieHub7.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\hugog\\.nuget\\packages\\microsoft.aspnetcore.app.internal.assets\\10.0.0-preview.7.25380.108\\microsoft.aspnetcore.app.internal.assets.10.0.0-preview.7.25380.108.nupkg.sha512"
+  ],
+  "logs": []
+}
