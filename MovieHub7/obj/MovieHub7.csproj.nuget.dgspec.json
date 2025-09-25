@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\hugog\\OneDrive\\Área de Trabalho\\cse325_team7_project\\MovieHub7\\MovieHub7.csproj": {}
+    "c:\\Users\\hugog\\OneDrive\\Área de Trabalho\\cse325_team7_project\\MovieHub7\\MovieHub7.csproj": {}
   },
   "projects": {
-    "C:\\Users\\hugog\\OneDrive\\Área de Trabalho\\cse325_team7_project\\MovieHub7\\MovieHub7.csproj": {
+    "c:\\Users\\hugog\\OneDrive\\Área de Trabalho\\cse325_team7_project\\MovieHub7\\MovieHub7.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\hugog\\OneDrive\\Área de Trabalho\\cse325_team7_project\\MovieHub7\\MovieHub7.csproj",
+        "projectUniqueName": "c:\\Users\\hugog\\OneDrive\\Área de Trabalho\\cse325_team7_project\\MovieHub7\\MovieHub7.csproj",
         "projectName": "MovieHub7",
-        "projectPath": "C:\\Users\\hugog\\OneDrive\\Área de Trabalho\\cse325_team7_project\\MovieHub7\\MovieHub7.csproj",
+        "projectPath": "c:\\Users\\hugog\\OneDrive\\Área de Trabalho\\cse325_team7_project\\MovieHub7\\MovieHub7.csproj",
         "packagesPath": "C:\\Users\\hugog\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\hugog\\OneDrive\\Área de Trabalho\\cse325_team7_project\\MovieHub7\\obj\\",
+        "outputPath": "c:\\Users\\hugog\\OneDrive\\Área de Trabalho\\cse325_team7_project\\MovieHub7\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\hugog\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -49,6 +49,30 @@
               "target": "Package",
               "version": "[10.0.0-preview.7.25380.108, )",
               "autoReferenced": true
+            },
+            "Microsoft.EntityFrameworkCore.Design": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[9.0.9, )"
+            },
+            "Microsoft.EntityFrameworkCore.SqlServer": {
+              "target": "Package",
+              "version": "[9.0.9, )"
+            },
+            "Microsoft.EntityFrameworkCore.Sqlite": {
+              "target": "Package",
+              "version": "[9.0.9, )"
+            },
+            "Microsoft.EntityFrameworkCore.Tools": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[9.0.9, )"
+            },
+            "Microsoft.VisualStudio.Web.CodeGeneration.Design": {
+              "target": "Package",
+              "version": "[9.0.0, )"
             }
           },
           "imports": [
