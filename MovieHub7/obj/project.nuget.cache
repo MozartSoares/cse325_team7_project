@@ -1,11 +1,12 @@
 {
   "version": 2,
-  "dgSpecHash": "fNvuHRG0k3I=",
+  "dgSpecHash": "hcxEsM5AlKk=",
   "success": true,
-  "projectFilePath": "c:\\Users\\hugog\\OneDrive\\Área de Trabalho\\cse325_team7_project\\MovieHub7\\MovieHub7.csproj",
+  "projectFilePath": "C:\\Users\\hugog\\OneDrive\\Área de Trabalho\\cse325_team7_project\\MovieHub7\\MovieHub7.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\hugog\\.nuget\\packages\\azure.core\\1.38.0\\azure.core.1.38.0.nupkg.sha512",
     "C:\\Users\\hugog\\.nuget\\packages\\azure.identity\\1.11.4\\azure.identity.1.11.4.nupkg.sha512",
+    "C:\\Users\\hugog\\.nuget\\packages\\dnsclient\\1.6.1\\dnsclient.1.6.1.nupkg.sha512",
     "C:\\Users\\hugog\\.nuget\\packages\\humanizer\\2.14.1\\humanizer.2.14.1.nupkg.sha512",
     "C:\\Users\\hugog\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
     "C:\\Users\\hugog\\.nuget\\packages\\humanizer.core.af\\2.14.1\\humanizer.core.af.2.14.1.nupkg.sha512",
@@ -106,6 +107,8 @@
     "C:\\Users\\hugog\\.nuget\\packages\\microsoft.visualstudio.web.codegeneration.templating\\9.0.0\\microsoft.visualstudio.web.codegeneration.templating.9.0.0.nupkg.sha512",
     "C:\\Users\\hugog\\.nuget\\packages\\microsoft.visualstudio.web.codegeneration.utils\\9.0.0\\microsoft.visualstudio.web.codegeneration.utils.9.0.0.nupkg.sha512",
     "C:\\Users\\hugog\\.nuget\\packages\\microsoft.visualstudio.web.codegenerators.mvc\\9.0.0\\microsoft.visualstudio.web.codegenerators.mvc.9.0.0.nupkg.sha512",
+    "C:\\Users\\hugog\\.nuget\\packages\\mongodb.bson\\3.5.0\\mongodb.bson.3.5.0.nupkg.sha512",
+    "C:\\Users\\hugog\\.nuget\\packages\\mongodb.driver\\3.5.0\\mongodb.driver.3.5.0.nupkg.sha512",
     "C:\\Users\\hugog\\.nuget\\packages\\mono.texttemplating\\3.0.0\\mono.texttemplating.3.0.0.nupkg.sha512",
     "C:\\Users\\hugog\\.nuget\\packages\\newtonsoft.json\\13.0.3\\newtonsoft.json.13.0.3.nupkg.sha512",
     "C:\\Users\\hugog\\.nuget\\packages\\nuget.common\\6.11.0\\nuget.common.6.11.0.nupkg.sha512",
@@ -117,6 +120,8 @@
     "C:\\Users\\hugog\\.nuget\\packages\\nuget.projectmodel\\6.11.0\\nuget.projectmodel.6.11.0.nupkg.sha512",
     "C:\\Users\\hugog\\.nuget\\packages\\nuget.protocol\\6.11.0\\nuget.protocol.6.11.0.nupkg.sha512",
     "C:\\Users\\hugog\\.nuget\\packages\\nuget.versioning\\6.11.0\\nuget.versioning.6.11.0.nupkg.sha512",
+    "C:\\Users\\hugog\\.nuget\\packages\\sharpcompress\\0.30.1\\sharpcompress.0.30.1.nupkg.sha512",
+    "C:\\Users\\hugog\\.nuget\\packages\\snappier\\1.0.0\\snappier.1.0.0.nupkg.sha512",
     "C:\\Users\\hugog\\.nuget\\packages\\sqlitepclraw.bundle_e_sqlite3\\2.1.10\\sqlitepclraw.bundle_e_sqlite3.2.1.10.nupkg.sha512",
     "C:\\Users\\hugog\\.nuget\\packages\\sqlitepclraw.core\\2.1.10\\sqlitepclraw.core.2.1.10.nupkg.sha512",
     "C:\\Users\\hugog\\.nuget\\packages\\sqlitepclraw.lib.e_sqlite3\\2.1.10\\sqlitepclraw.lib.e_sqlite3.2.1.10.nupkg.sha512",
@@ -136,7 +141,8 @@
     "C:\\Users\\hugog\\.nuget\\packages\\system.reflection.metadataloadcontext\\8.0.0\\system.reflection.metadataloadcontext.8.0.0.nupkg.sha512",
     "C:\\Users\\hugog\\.nuget\\packages\\system.runtime.caching\\6.0.0\\system.runtime.caching.6.0.0.nupkg.sha512",
     "C:\\Users\\hugog\\.nuget\\packages\\system.security.cryptography.pkcs\\6.0.4\\system.security.cryptography.pkcs.6.0.4.nupkg.sha512",
-    "C:\\Users\\hugog\\.nuget\\packages\\system.security.cryptography.protecteddata\\8.0.0\\system.security.cryptography.protecteddata.8.0.0.nupkg.sha512"
+    "C:\\Users\\hugog\\.nuget\\packages\\system.security.cryptography.protecteddata\\8.0.0\\system.security.cryptography.protecteddata.8.0.0.nupkg.sha512",
+    "C:\\Users\\hugog\\.nuget\\packages\\zstdsharp.port\\0.7.3\\zstdsharp.port.0.7.3.nupkg.sha512"
   ],
   "logs": []
 }

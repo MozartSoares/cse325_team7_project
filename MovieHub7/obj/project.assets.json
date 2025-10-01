@@ -39,6 +39,19 @@
           }
         }
       },
+      "DnsClient/1.6.1": {
+        "type": "package",
+        "compile": {
+          "lib/net5.0/DnsClient.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net5.0/DnsClient.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "Humanizer/2.14.1": {
         "type": "package",
         "dependencies": {
@@ -1875,6 +1888,39 @@
           }
         }
       },
+      "MongoDB.Bson/3.5.0": {
+        "type": "package",
+        "compile": {
+          "lib/net6.0/MongoDB.Bson.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net6.0/MongoDB.Bson.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "MongoDB.Driver/3.5.0": {
+        "type": "package",
+        "dependencies": {
+          "DnsClient": "1.6.1",
+          "MongoDB.Bson": "3.5.0",
+          "SharpCompress": "0.30.1",
+          "Snappier": "1.0.0",
+          "ZstdSharp.Port": "0.7.3"
+        },
+        "compile": {
+          "lib/net6.0/MongoDB.Driver.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net6.0/MongoDB.Driver.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "Mono.TextTemplating/3.0.0": {
         "type": "package",
         "dependencies": {
@@ -2010,6 +2056,28 @@
         },
         "runtime": {
           "lib/netstandard2.0/NuGet.Versioning.dll": {}
+        }
+      },
+      "SharpCompress/0.30.1": {
+        "type": "package",
+        "compile": {
+          "lib/net5.0/SharpCompress.dll": {}
+        },
+        "runtime": {
+          "lib/net5.0/SharpCompress.dll": {}
+        }
+      },
+      "Snappier/1.0.0": {
+        "type": "package",
+        "compile": {
+          "lib/net5.0/Snappier.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net5.0/Snappier.dll": {
+            "related": ".xml"
+          }
         }
       },
       "SQLitePCLRaw.bundle_e_sqlite3/2.1.10": {
@@ -2422,6 +2490,15 @@
         "build": {
           "buildTransitive/net6.0/_._": {}
         }
+      },
+      "ZstdSharp.Port/0.7.3": {
+        "type": "package",
+        "compile": {
+          "lib/net7.0/ZstdSharp.dll": {}
+        },
+        "runtime": {
+          "lib/net7.0/ZstdSharp.dll": {}
+        }
       }
     }
   },
@@ -2462,6 +2539,30 @@
         "azureicon.png",
         "lib/netstandard2.0/Azure.Identity.dll",
         "lib/netstandard2.0/Azure.Identity.xml"
+      ]
+    },
+    "DnsClient/1.6.1": {
+      "sha512": "4H/f2uYJOZ+YObZjpY9ABrKZI+JNw3uizp6oMzTXwDw6F+2qIPhpRl/1t68O/6e98+vqNiYGu+lswmwdYUy3gg==",
+      "type": "package",
+      "path": "dnsclient/1.6.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "dnsclient.1.6.1.nupkg.sha512",
+        "dnsclient.nuspec",
+        "icon.png",
+        "lib/net45/DnsClient.dll",
+        "lib/net45/DnsClient.xml",
+        "lib/net471/DnsClient.dll",
+        "lib/net471/DnsClient.xml",
+        "lib/net5.0/DnsClient.dll",
+        "lib/net5.0/DnsClient.xml",
+        "lib/netstandard1.3/DnsClient.dll",
+        "lib/netstandard1.3/DnsClient.xml",
+        "lib/netstandard2.0/DnsClient.dll",
+        "lib/netstandard2.0/DnsClient.xml",
+        "lib/netstandard2.1/DnsClient.dll",
+        "lib/netstandard2.1/DnsClient.xml"
       ]
     },
     "Humanizer/2.14.1": {
@@ -5500,6 +5601,44 @@
         "microsoft.visualstudio.web.codegenerators.mvc.nuspec"
       ]
     },
+    "MongoDB.Bson/3.5.0": {
+      "sha512": "JGNK6BanLDEifgkvPLqVFCPus5EDCy416pxf1dxUBRSVd3D9+NB3AvMVX190eXlk5/UXuCxpsQv7jWfNKvppBQ==",
+      "type": "package",
+      "path": "mongodb.bson/3.5.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "lib/net472/MongoDB.Bson.dll",
+        "lib/net472/MongoDB.Bson.xml",
+        "lib/net6.0/MongoDB.Bson.dll",
+        "lib/net6.0/MongoDB.Bson.xml",
+        "lib/netstandard2.1/MongoDB.Bson.dll",
+        "lib/netstandard2.1/MongoDB.Bson.xml",
+        "mongodb.bson.3.5.0.nupkg.sha512",
+        "mongodb.bson.nuspec",
+        "packageIcon.png"
+      ]
+    },
+    "MongoDB.Driver/3.5.0": {
+      "sha512": "ST90u7psyMkNNOWFgSkexsrB3kPn7Ynl2DlMFj2rJyYuc6SIxjmzu4ufy51yzM+cPVE1SvVcdb5UFobrRw6cMg==",
+      "type": "package",
+      "path": "mongodb.driver/3.5.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "lib/net472/MongoDB.Driver.dll",
+        "lib/net472/MongoDB.Driver.xml",
+        "lib/net6.0/MongoDB.Driver.dll",
+        "lib/net6.0/MongoDB.Driver.xml",
+        "lib/netstandard2.1/MongoDB.Driver.dll",
+        "lib/netstandard2.1/MongoDB.Driver.xml",
+        "mongodb.driver.3.5.0.nupkg.sha512",
+        "mongodb.driver.nuspec",
+        "packageIcon.png"
+      ]
+    },
     "Mono.TextTemplating/3.0.0": {
       "sha512": "YqueG52R/Xej4VVbKuRIodjiAhV0HR/XVbLbNrJhCZnzjnSjgMJ/dCdV0akQQxavX6hp/LC6rqLGLcXeQYU7XA==",
       "type": "package",
@@ -5684,6 +5823,42 @@
         "lib/netstandard2.0/NuGet.Versioning.dll",
         "nuget.versioning.6.11.0.nupkg.sha512",
         "nuget.versioning.nuspec"
+      ]
+    },
+    "SharpCompress/0.30.1": {
+      "sha512": "XqD4TpfyYGa7QTPzaGlMVbcecKnXy4YmYLDWrU+JIj7IuRNl7DH2END+Ll7ekWIY8o3dAMWLFDE1xdhfIWD1nw==",
+      "type": "package",
+      "path": "sharpcompress/0.30.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/net461/SharpCompress.dll",
+        "lib/net5.0/SharpCompress.dll",
+        "lib/netcoreapp3.1/SharpCompress.dll",
+        "lib/netstandard2.0/SharpCompress.dll",
+        "lib/netstandard2.1/SharpCompress.dll",
+        "sharpcompress.0.30.1.nupkg.sha512",
+        "sharpcompress.nuspec"
+      ]
+    },
+    "Snappier/1.0.0": {
+      "sha512": "rFtK2KEI9hIe8gtx3a0YDXdHOpedIf9wYCEYtBEmtlyiWVX3XlCNV03JrmmAi/Cdfn7dxK+k0sjjcLv4fpHnqA==",
+      "type": "package",
+      "path": "snappier/1.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "COPYING.txt",
+        "lib/net5.0/Snappier.dll",
+        "lib/net5.0/Snappier.xml",
+        "lib/netcoreapp3.0/Snappier.dll",
+        "lib/netcoreapp3.0/Snappier.xml",
+        "lib/netstandard2.0/Snappier.dll",
+        "lib/netstandard2.0/Snappier.xml",
+        "lib/netstandard2.1/Snappier.dll",
+        "lib/netstandard2.1/Snappier.xml",
+        "snappier.1.0.0.nupkg.sha512",
+        "snappier.nuspec"
       ]
     },
     "SQLitePCLRaw.bundle_e_sqlite3/2.1.10": {
@@ -6205,6 +6380,24 @@
         "system.security.cryptography.protecteddata.nuspec",
         "useSharedDesignerContext.txt"
       ]
+    },
+    "ZstdSharp.Port/0.7.3": {
+      "sha512": "U9Ix4l4cl58Kzz1rJzj5hoVTjmbx1qGMwzAcbv1j/d3NzrFaESIurQyg+ow4mivCgkE3S413y+U9k4WdnEIkRA==",
+      "type": "package",
+      "path": "zstdsharp.port/0.7.3",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/net461/ZstdSharp.dll",
+        "lib/net5.0/ZstdSharp.dll",
+        "lib/net6.0/ZstdSharp.dll",
+        "lib/net7.0/ZstdSharp.dll",
+        "lib/netcoreapp3.1/ZstdSharp.dll",
+        "lib/netstandard2.0/ZstdSharp.dll",
+        "lib/netstandard2.1/ZstdSharp.dll",
+        "zstdsharp.port.0.7.3.nupkg.sha512",
+        "zstdsharp.port.nuspec"
+      ]
     }
   },
   "projectFileDependencyGroups": {
@@ -6214,7 +6407,8 @@
       "Microsoft.EntityFrameworkCore.SqlServer >= 9.0.9",
       "Microsoft.EntityFrameworkCore.Sqlite >= 9.0.9",
       "Microsoft.EntityFrameworkCore.Tools >= 9.0.9",
-      "Microsoft.VisualStudio.Web.CodeGeneration.Design >= 9.0.0"
+      "Microsoft.VisualStudio.Web.CodeGeneration.Design >= 9.0.0",
+      "MongoDB.Driver >= 3.5.0"
     ]
   },
   "packageFolders": {
@@ -6289,6 +6483,10 @@
           "Microsoft.VisualStudio.Web.CodeGeneration.Design": {
             "target": "Package",
             "version": "[9.0.0, )"
+          },
+          "MongoDB.Driver": {
+            "target": "Package",
+            "version": "[3.5.0, )"
           }
         },
         "imports": [

@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "c:\\Users\\hugog\\OneDrive\\Área de Trabalho\\cse325_team7_project\\MovieHub7\\MovieHub7.csproj": {}
+    "C:\\Users\\hugog\\OneDrive\\Área de Trabalho\\cse325_team7_project\\MovieHub7\\MovieHub7.csproj": {}
   },
   "projects": {
-    "c:\\Users\\hugog\\OneDrive\\Área de Trabalho\\cse325_team7_project\\MovieHub7\\MovieHub7.csproj": {
+    "C:\\Users\\hugog\\OneDrive\\Área de Trabalho\\cse325_team7_project\\MovieHub7\\MovieHub7.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "c:\\Users\\hugog\\OneDrive\\Área de Trabalho\\cse325_team7_project\\MovieHub7\\MovieHub7.csproj",
+        "projectUniqueName": "C:\\Users\\hugog\\OneDrive\\Área de Trabalho\\cse325_team7_project\\MovieHub7\\MovieHub7.csproj",
         "projectName": "MovieHub7",
-        "projectPath": "c:\\Users\\hugog\\OneDrive\\Área de Trabalho\\cse325_team7_project\\MovieHub7\\MovieHub7.csproj",
+        "projectPath": "C:\\Users\\hugog\\OneDrive\\Área de Trabalho\\cse325_team7_project\\MovieHub7\\MovieHub7.csproj",
         "packagesPath": "C:\\Users\\hugog\\.nuget\\packages\\",
-        "outputPath": "c:\\Users\\hugog\\OneDrive\\Área de Trabalho\\cse325_team7_project\\MovieHub7\\obj\\",
+        "outputPath": "C:\\Users\\hugog\\OneDrive\\Área de Trabalho\\cse325_team7_project\\MovieHub7\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\hugog\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -73,6 +73,10 @@
             "Microsoft.VisualStudio.Web.CodeGeneration.Design": {
               "target": "Package",
               "version": "[9.0.0, )"
+            },
+            "MongoDB.Driver": {
+              "target": "Package",
+              "version": "[3.5.0, )"
             }
           },
           "imports": [

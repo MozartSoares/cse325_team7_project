@@ -1,7 +1,57 @@
 ﻿@page "/"
+@using MovieHub7.Models
+@inject MovieHub7.Services.MovieService MovieService
+@inject MovieHub7.Services.UserService UserService
+@inject MovieHub7.Services.ListService ListService
 
-<PageTitle>MovieHub7</PageTitle>
+<h1>Movies</h1>
 
-<h1>Hello, world! Welcome to the MovieHub7</h1>
+@if (movies == null)
+{
+    <p>Loading...</p>
+}
+else if (!movies.Any())
+{
+    <p>No movies found.</p>
+}
+else
+{
+    <ul>
+        @foreach (var m in movies)
+        {
+            <li>@m.Title (@m.ReleaseDate.Year) — @m.Genre</li>
+        }
+    </ul>
+}
 
-Welcome to your new app.
+<h2>Lists</h2>
+@if (lists == null)
+{
+    <p>Loading lists...</p>
+}
+else if (!lists.Any())
+{
+    <p>No lists found.</p>
+}
+else
+{
+    <ul>
+        @foreach (var l in lists)
+        {
+            <li>@l.Title (Created: @l.CreatedAt)</li>
+        }
+    </ul>
+}
+
+@code {
+    private List<Movie>? movies;
+    private List<ListModel>? lists;
+
+    protected override async Task OnInitializedAsync()
+    {
+        movies = await MovieService.GetAsync();
+        await UserService.SeedAsync();
+        await ListService.SeedAsync();
+        lists = await ListService.GetAsync();
+    }
+}

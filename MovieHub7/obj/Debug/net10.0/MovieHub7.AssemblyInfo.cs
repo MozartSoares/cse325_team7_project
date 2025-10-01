@@ -10,10 +10,11 @@
 using System;
 using System.Reflection;
 
+[assembly: Microsoft.Extensions.Configuration.UserSecrets.UserSecretsIdAttribute("b51c8bd5-0f20-4bb3-9c73-849112b266e3")]
 [assembly: System.Reflection.AssemblyCompanyAttribute("MovieHub7")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6231cbe09cbcbae8eae10caf6173e311960f1054")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+24f6d1f1125970532baf8111e26ac887703e2e54")]
 [assembly: System.Reflection.AssemblyProductAttribute("MovieHub7")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MovieHub7")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
