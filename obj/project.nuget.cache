@@ -1,8 +1,12 @@
 {
   "version": 2,
-  "dgSpecHash": "bRiGBnnk8cE=",
+  "dgSpecHash": "/p5mNqWT838=",
   "success": true,
   "projectFilePath": "/home/zart/dev/byu/cse325/cse325_team7_project/cse325_team7_project.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "/home/zart/.nuget/packages/mongodb.bson/2.25.0/mongodb.bson.2.25.0.nupkg.sha512",
+    "/home/zart/.nuget/packages/system.memory/4.5.5/system.memory.4.5.5.nupkg.sha512",
+    "/home/zart/.nuget/packages/system.runtime.compilerservices.unsafe/5.0.0/system.runtime.compilerservices.unsafe.5.0.0.nupkg.sha512"
+  ],
   "logs": []
 }
