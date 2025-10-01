@@ -1,0 +1,66 @@
+/* Navbar container - make it flexbox */
+:host {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: 15px;
+    padding: 10px 15px;
+}
+
+.logo-container {
+    display: flex;
+    height: 5vh;
+    flex-shrink: 0; /* Don't shrink the logo */
+}
+
+.logo {
+    display: block;
+    padding: 0;
+    margin: 0;
+}
+
+/* Search form - take up remaining space */
+form {
+    flex: 1; /* Take up all available space */
+    display: flex;
+}
+
+.search-bar {
+    border-radius: 25px !important;
+    width: 100%;
+    padding: 8px 15px;
+    border: 1px solid #ddd;
+    outline: none;
+    font-size: 14px;
+}
+
+.search-bar:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Navigation items - don't shrink */
+nav {
+    flex-shrink: 0;
+}
+
+.nav-item {
+    color: #eeee;
+    text-decoration: none !important;
+}
+
+.navLink {
+    text-decoration: none !important;
+}
+
+.nav-item a {
+    text-decoration: none !important;
+}
+
+a.navLink {
+    text-decoration: none !important;
+}
+
+@media (min-width: 641px) {
+
+}

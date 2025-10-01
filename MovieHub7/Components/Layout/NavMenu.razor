@@ -1,0 +1,25 @@
+@using MovieHub7.Models
+@using Microsoft.AspNetCore.Components.Forms
+
+<a class="logo-container" href="/">
+<img class="logo" src="img/logo.svg"/>
+</a>
+
+<EditForm Model="@searchModel">
+    <InputText class="search-bar" @bind-Value="searchModel.Title" placeholder="Search movies..."></InputText>
+</EditForm>
+
+<nav>
+    <div class="nav-item px-5">
+        <NavLink class="navLink user-link" href="/" Match="NavLinkMatch.All">
+        User
+        </NavLink>
+    </div>
+</nav>
+
+@code
+{
+    private Movie searchModel = new Movie();
+}
+
+

@@ -1,0 +1,55 @@
+@using MovieHub7.Models
+@using MovieHub7.Data
+@using Microsoft.EntityFrameworkCore
+@inject MovieHub7Context Context
+
+
+<h1 class="movie-label">Movies</h1>
+<div class="movie-cards">
+    @if (MoviesList == null)
+    {
+        <p>Loading movies...</p>
+    }
+    else if (MoviesList.Count == 0)
+    {
+        <p>No movies found in database.</p>
+    }
+    else
+    {
+        @foreach (var movie in MoviesList)
+        {
+            <div class="movie-card">
+                <div class="movie-image">
+                    <img src="@movie.ThumbnailImage" alt="@movie.Title" class="movie-poster" />
+                </div>
+                <div class="movie-info">
+                    <h3 class="movie-title">@movie.Title</h3>
+                    <p class="movie-genre">@movie.Genre</p>
+                    <p class="movie-description">@movie.Description</p>
+                    <p class="movie-budget">Budget: $@movie.Budget.ToString("N0")</p>
+                    <p class="movie-year">@movie.ReleaseYear.Year</p>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+
+@code
+{
+    List<Movie>? MoviesList = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            MoviesList = await Context.Movies.ToListAsync();
+            Console.WriteLine($"Loaded {MoviesList.Count} movies");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading movies: {ex.Message}");
+            MoviesList = new List<Movie>();
+        }
+    }
+}
