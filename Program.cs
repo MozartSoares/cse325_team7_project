@@ -28,18 +28,26 @@ builder.Services.AddControllers(options =>
 builder.Services.AddSingleton<IMongoClient>(sp =>
 {
     var config = sp.GetRequiredService<IConfiguration>();
-    var cs = config["Mongo:ConnectionString"] ?? "mongodb://localhost:27017";
+    var cs = config["MongoDB:ConnectionString"];
     return new MongoClient(cs);
 });
 builder.Services.AddSingleton(sp =>
 {
     var config = sp.GetRequiredService<IConfiguration>();
-    var dbName = config["Mongo:Database"] ?? "moviehub";
+    var dbName = config["MongoDB:DatabaseName"];
     return sp.GetRequiredService<IMongoClient>().GetDatabase(dbName);
 });
-builder.Services.AddSingleton<IMongoCollection<Movie>>(sp => sp.GetRequiredService<IMongoDatabase>().GetCollection<Movie>("movies"));
-builder.Services.AddSingleton<IMongoCollection<User>>(sp => sp.GetRequiredService<IMongoDatabase>().GetCollection<User>("users"));
-builder.Services.AddSingleton<IMongoCollection<MoviesList>>(sp => sp.GetRequiredService<IMongoDatabase>().GetCollection<MoviesList>("lists"));
+builder.Services.AddSingleton<IMongoCollection<Movie>>(sp => sp.GetRequiredService<IMongoDatabase>().GetCollection<Movie>("Movies"));
+builder.Services.AddSingleton<IMongoCollection<User>>(sp => sp.GetRequiredService<IMongoDatabase>().GetCollection<User>("Users"));
+builder.Services.AddSingleton<IMongoCollection<MoviesList>>(sp => sp.GetRequiredService<IMongoDatabase>().GetCollection<MoviesList>("Lists"));
+
+
+// later uncomment to implement seed data
+// using (var scope = app.Services.CreateScope())
+// {
+//     var movieService = scope.ServiceProvider.GetRequiredService<MovieService>();
+//     await movieService.SeedAsync();
+// }
 
 // --- Domain services ----------------------------------------------------------
 // Register our CRUD services at scoped lifetime so each HTTP request gets its own

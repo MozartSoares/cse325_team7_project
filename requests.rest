@@ -1,0 +1,152 @@
+@baseUrl = http://localhost:5128
+# switch to https on Kestrel's default tls port if needed
+# @baseUrl = https://localhost:5001
+
+@movieId = 68ddd646573ad2adfa7f7b5e
+@listId = 000000000000000000000000
+@userId = 000000000000000000000000
+
+### Movies - list all
+GET {{baseUrl}}/api/movies
+Accept: application/json
+
+### Movies - get by id
+GET {{baseUrl}}/api/movies/{{movieId}}
+Accept: application/json
+
+### Movies - create
+POST {{baseUrl}}/api/movies
+Content-Type: application/json
+Accept: application/json
+
+{
+  "title": "Inception",
+  "releaseDate": "2010-07-16",
+  "genre": 1,
+  "description": "A mind-bending thriller about dream heists.",
+  "studio": "Warner Bros.",
+  "cast": [
+    {
+      "name": "Christopher Nolan",
+      "role": 1
+    },
+    {
+      "name": "Leonardo DiCaprio",
+      "role": 2
+    }
+  ],
+  "image": "https://example.com/inception/poster.jpg",
+  "thumbnailImage": "https://example.com/inception/thumb.jpg",
+  "budget": 160000000
+}
+
+
+
+### Movies - update
+PUT {{baseUrl}}/api/movies/{{movieId}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "title": "Inception (Updated)",
+  "releaseDate": "2010-07-16",
+  "genre": "ScienceFiction",
+  "description": "Updated description for the Inception entry.",
+  "studio": "Warner Bros.",
+  "cast": [
+    {
+      "name": "Christopher Nolan",
+      "role": 1
+    },
+    {
+      "name": "Leonardo DiCaprio",
+      "role": 2
+    }
+  ],
+  "image": "https://example.com/inception/poster.jpg",
+  "thumbnailImage": "https://example.com/inception/thumb.jpg",
+  "budget": 165000000
+}
+
+### Movies - delete
+DELETE {{baseUrl}}/api/movies/{{movieId}}
+
+### Lists - list all
+GET {{baseUrl}}/api/lists
+Accept: application/json
+
+### Lists - get by id
+GET {{baseUrl}}/api/lists/{{listId}}
+Accept: application/json
+
+### Lists - create
+POST {{baseUrl}}/api/lists
+Content-Type: application/json
+Accept: application/json
+
+{
+  "title": "Favorites",
+  "movies": [
+    "{{movieId}}"
+  ]
+}
+> {% client.global.set("listId", response.body.id); %}
+
+### Lists - update
+PUT {{baseUrl}}/api/lists/{{listId}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "title": "Favorites (Updated)",
+  "movies": [
+    "{{movieId}}"
+  ]
+}
+
+### Lists - delete
+DELETE {{baseUrl}}/api/lists/{{listId}}
+
+### Users - list all
+GET {{baseUrl}}/api/users
+Accept: application/json
+
+### Users - get by id
+GET {{baseUrl}}/api/users/{{userId}}
+Accept: application/json
+
+### Users - create
+POST {{baseUrl}}/api/users
+Content-Type: application/json
+Accept: application/json
+
+{
+  "username": "admin",
+  "name": "Admin User",
+  "passwordHash": "hashed-password",
+  "email": "admin@example.com",
+  "lists": [
+    "{{listId}}"
+  ],
+  "role": "Admin"
+}
+> {% client.global.set("userId", response.body.id); %}
+
+### Users - update
+PUT {{baseUrl}}/api/users/{{userId}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "name": "Admin User (Updated)",
+  "passwordHash": null,
+  "email": "admin@example.com",
+  "lists": [
+    "{{listId}}"
+  ],
+  "role": "Admin"
+}
+
+### Users - delete
+DELETE {{baseUrl}}/api/users/{{userId}}
+

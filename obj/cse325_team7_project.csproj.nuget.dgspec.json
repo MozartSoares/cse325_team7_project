@@ -47,11 +47,11 @@
           "dependencies": {
             "MongoDB.Bson": {
               "target": "Package",
-              "version": "[2.25.0, )"
+              "version": "[3.5.0, )"
             },
             "MongoDB.Driver": {
               "target": "Package",
-              "version": "[2.25.0, )"
+              "version": "[3.5.0, )"
             }
           },
           "imports": [
