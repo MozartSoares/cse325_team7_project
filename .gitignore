@@ -1,0 +1,30 @@
+# Build outputs
+bin/
+obj/
+
+# Visual Studio / Rider
+.vs/
+.idea/
+*.user
+*.suo
+*.userprefs
+*.csproj.user
+*.rsuser
+*.DotSettings*
+
+# Logs
+*.log
+
+# Environment
+.env
+*.local.json
+
+# Coverage / Testing
+TestResults/
+coverage/
+*.coverage
+*.coveragexml
+
+# OS
+.DS_Store
+Thumbs.db

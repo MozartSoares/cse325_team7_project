@@ -1,0 +1,126 @@
+# Backend Architecture Overview
+
+This document complements `README.md` and focuses on the backend.
+
+## High-Level Design
+
+```
+Domain (entities, enums, value objects)
+        ↓
+API ──► DTOs ↔ Mapping Extensions
+        ↓
+      Services (MongoDB repositories + business rules)
+        ↓
+ Controllers (thin HTTP endpoints)
+        ↓
+ Middleware / Model Binders (cross‑cutting concerns)
+```
+
+The goal is to keep controllers thin, concentrate business logic inside services, and treat MongoDB infrastructure as an implementation detail hidden behind the service layer. Cross-cutting aspects such as error handling and ObjectId parsing live in dedicated components.
+
+## Domain Layer (`/Domain`)
+
+| Path                                         | Description                                                                                         |
+| -------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `Domain/Models/BaseDocument.cs`              | Base class for documents with `Id`, `CreatedAt`, `UpdatedAt` set in UTC.                            |
+| `Domain/Models/Movie.cs`                     | Movie aggregate with genre, cast, images, budget, etc. Uses `DateOnlySerializer` for release dates. |
+| `Domain/Models/User.cs`                      | User aggregate with password hash, role, and references to movie lists.                             |
+| `Domain/Models/MoviesList.cs`                | Represents a curated list of movies identified by ObjectIds.                                        |
+| `Domain/Enums/*.cs`                          | Enumeration definitions (genres, roles, cast roles).                                                |
+| `Domain/ValueObjects/CastMember.cs`          | Value object used in a movie cast.                                                                  |
+| `Domain/Serialization/DateOnlySerializer.cs` | Custom BSON serializer to store `DateOnly` as midnight UTC instants.                                |
+
+These types are plain C# objects without knowledge of HTTP or persistence specifics.
+
+## API Layer (`/Api`)
+
+### DTOs and Mappings
+
+- `Api/DTOs/*.cs` define the API contract (Create/Update/Response DTOs).
+- `Api/DTOs/MappingExtensions.cs` contains extension methods to convert between domain models and DTOs. Controllers only deal with DTOs, while services operate on domain models.
+
+### Services
+
+Interfaces live in `Api/Services/Interfaces` and describe the CRUD surface for each aggregate. Implementations in `Api/Services/*.cs` use `IMongoCollection<T>`:
+
+- `MovieService` handles movies, updating timestamps and replacing documents.
+- `UserService` enforces unique usernames/emails before write operations.
+- `MoviesListService` validates referenced movie ids before persisting a list.
+
+### Controllers
+
+REST endpoints are exposed via:
+
+- `Api/Controllers/MoviesController.cs` → `/api/movies`
+- `Api/Controllers/UsersController.cs` → `/api/users`
+- `Api/Controllers/ListsController.cs` → `/api/lists`
+
+Actions accept DTOs, delegate to services, and return DTOs. They do not contain manual validations or try/catch blocks thanks to the shared middleware and binder.
+
+### Error Handling & Binding
+
+- `Api/Common/Errors.cs` introduces `HttpException` and specific derivatives (`NotFoundException`, `ConflictException`, `ValidationException`, `BadRequestException`). Services and infrastructure throw these to signal business conditions.
+- `Api/Middleware/ErrorHandlingMiddleware.cs` catches `HttpException` and converts them into JSON responses with the correct HTTP status code. Unexpected exceptions become HTTP 500 with a generic message (and are logged).
+- `Api/Binders/ObjectIdModelBinder.cs` plus `ObjectIdModelBinderProvider.cs` ensure that route parameters typed as `ObjectId` are automatically parsed. Invalid ids trigger a `BadRequestException` that is handled by the middleware.
+
+## Dependency Injection & Configuration (`Program.cs`)
+
+- Registers Razor components (existing Blazor UI).
+- Adds controllers and inserts the custom ObjectId binder.
+- Wires MongoDB dependencies:
+  - `IMongoClient` uses connection string `Mongo:ConnectionString` (default `mongodb://localhost:27017`).
+  - `IMongoDatabase` uses `Mongo:Database` (default `moviehub`).
+  - Individual `IMongoCollection<T>` registrations for movies, users, and lists.
+- Registers scoped services for each aggregate (`MovieService`, `UserService`, `MoviesListService`).
+- Adds `ErrorHandlingMiddleware` before antiforgery/static assets so every request benefits from consistent error responses.
+- Maps controllers and keeps the existing Blazor pipeline intact.
+
+## Error Responses
+
+| Scenario                      | Exception             | HTTP | Payload                                         |
+| ----------------------------- | --------------------- | ---- | ----------------------------------------------- |
+| Entity not found              | `NotFoundException`   | 404  | `{ "message": "..." }`                          |
+| Uniqueness violation          | `ConflictException`   | 409  | `{ "message": "..." }`                          |
+| Validation failure (business) | `ValidationException` | 422  | `{ "message": "..." }`                          |
+| Invalid route id              | `BadRequestException` | 400  | `{ "message": "..." }`                          |
+| Unhandled exception           | n/a                   | 500  | `{ "message": "An unexpected error occurred" }` |
+
+## Extending the Backend
+
+1. **Add new aggregate**
+   - Create model/value objects/enums under `Domain`.
+   - Create DTOs + mappings mirroring the domain type.
+   - Add service interface/implementation following existing patterns (use Mongo collection and throw the appropriate `HttpException`).
+   - Add controller exposing the HTTP contract.
+2. **Add Mongo indexes**
+   - Extend `Program.cs` or a future infrastructure layer to create indexes on startup (for example, unique indexes on `users.username` and `users.email`).
+3. **Authentication/Authorization**
+   - Plug ASP.NET Core authentication middleware and add `[Authorize]` attributes to controllers as the next increment.
+4. **Testing**
+   - Create integration tests using `WebApplicationFactory` and either an in-memory Mongo instance (e.g., Mongo2Go) or a test container.
+
+## Running Locally
+
+1. Provide MongoDB connection details in `appsettings.Development.json`:
+
+   ```json
+   {
+     "Mongo": {
+       "ConnectionString": "mongodb://localhost:27017",
+       "Database": "moviehub"
+     }
+   }
+   ```
+
+2. Restore & build: `dotnet restore && dotnet build`.
+3. Run: `dotnet run` (API available at `https://localhost:5001`, UI at the root).
+4. Test endpoints with cURL/Postman using the DTO shapes defined in `/Api/DTOs`.
+
+## Recent Changes (Commits `6e900bf` and `a8c55c5`)
+
+- Introduced the domain model (movies, users, lists, shared enums/value objects) with UTC timestamps and BSON serialization helpers.
+- Created API layer with DTOs, mapping extensions, Mongo-backed services, and REST controllers.
+- Added custom ObjectId binder, unified exception hierarchy, and global error-handling middleware for consistent JSON responses.
+- Wired MongoDB dependencies and controller routing in `Program.cs`.
+
+This document should give new contributors enough context to navigate the backend architecture quickly.
