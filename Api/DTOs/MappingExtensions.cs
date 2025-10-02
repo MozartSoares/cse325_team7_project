@@ -5,13 +5,9 @@ using MongoDB.Bson;
 
 namespace cse325_team7_project.Api.Mappings;
 
-/*
- * Mapper to work with our dtos and models
- * [FromBody] is used to bind the request body to the dto we pass
- * toModel: convert a dto to a model e.g Create([FromBody] MoviesListCreateDto dto)
- * toDto: convert a model to a dto e.g GetById(ObjectId id)
- * apply: update a model with a dto e.g Update(ObjectId id, [FromBody] MoviesListUpdateDto dto)
- */
+/// <summary>
+/// Centralizes conversions between API DTOs and domain models so controllers stay focused on orchestration.
+/// </summary>
 public static class MappingExtensions
 {
     // Movie

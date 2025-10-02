@@ -4,8 +4,10 @@ using cse325_team7_project.Api.Common;
 
 namespace cse325_team7_project.Api.Middleware;
 
-//middleware: catches all exceptions and returns the correct status code and message
-// it also logs the error (no need for try catch in controller routes, we can just throw the errors on service layer)
+/// <summary>
+/// Captures exceptions bubbling out of the pipeline and converts them into JSON responses.
+/// <see cref="HttpException"/> instances keep their status code; other exceptions are logged and surfaced as 500s.
+/// </summary>
 public class ErrorHandlingMiddleware(RequestDelegate next, ILogger<ErrorHandlingMiddleware> logger)
 {
     private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web);
@@ -13,6 +15,9 @@ public class ErrorHandlingMiddleware(RequestDelegate next, ILogger<ErrorHandling
     private readonly RequestDelegate _next = next;
     private readonly ILogger<ErrorHandlingMiddleware> _logger = logger;
 
+    /// <summary>
+    /// Passes the request down the pipeline and converts thrown exceptions into consistent responses.
+    /// </summary>
     public async Task Invoke(HttpContext context)
     {
         try

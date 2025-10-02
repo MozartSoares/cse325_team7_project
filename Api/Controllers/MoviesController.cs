@@ -1,7 +1,6 @@
 using cse325_team7_project.Api.DTOs;
 using cse325_team7_project.Api.Mappings;
 using cse325_team7_project.Api.Services.Interfaces;
-using cse325_team7_project.Domain.Models;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 

@@ -6,22 +6,29 @@ using MongoDB.Driver;
 
 namespace cse325_team7_project.Api.Services;
 
+/// <summary>
+/// MongoDB-backed implementation of <see cref="IMovieService"/>.
+/// Maintains timestamps in UTC and raises <see cref="HttpException"/> derivatives for controllers.
+/// </summary>
 public class MovieService(IMongoCollection<Movie> movies) : IMovieService
 {
     private readonly IMongoCollection<Movie> _movies = movies;
 
+    /// <inheritdoc />
     public async Task<IReadOnlyList<Movie>> List()
     {
         var cursor = await _movies.FindAsync(FilterDefinition<Movie>.Empty);
         return await cursor.ToListAsync();
     }
 
+    /// <inheritdoc />
     public async Task<Movie> Get(ObjectId id)
     {
         var movie = await _movies.Find(m => m.Id == id).FirstOrDefaultAsync() ?? throw new NotFoundException($"Movie {id} not found");
         return movie;
     }
 
+    /// <inheritdoc />
     public async Task<Movie> Create(Movie movie)
     {
         movie.UpdatedAt = DateTime.UtcNow;
@@ -29,6 +36,7 @@ public class MovieService(IMongoCollection<Movie> movies) : IMovieService
         return movie;
     }
 
+    /// <inheritdoc />
     public async Task<Movie> Update(ObjectId id, Movie update)
     {
         var current = await _movies.Find(m => m.Id == id).FirstOrDefaultAsync() ?? throw new NotFoundException($"Movie {id} not found");
@@ -40,6 +48,7 @@ public class MovieService(IMongoCollection<Movie> movies) : IMovieService
         return update;
     }
 
+    /// <inheritdoc />
     public async Task<bool> Delete(ObjectId id)
     {
         var result = await _movies.DeleteOneAsync(m => m.Id == id);
