@@ -1,0 +1,148 @@
+@using cse325_team7_project.Api.DTOs
+@using cse325_team7_project.Domain.Enums
+@inject HttpClient Http
+
+
+<h1 class="movie-label">Movies @(isUsingPlaceholderData ? "(Demo Data)" : "")</h1>
+<div class="movie-cards">
+    @if (MoviesList == null)
+    {
+        <p>Loading movies...</p>
+    }
+    else if (MoviesList.Count == 0)
+    {
+        <p>No movies found in database.</p>
+    }
+    else
+    {
+        @foreach (var movie in MoviesList)
+        {
+            <div class="movie-card">
+                <div class="movie-image">
+                    <img src="@movie.ThumbnailImage" alt="@movie.Title" class="movie-poster" />
+                </div>
+                <div class="movie-info">
+                    <h3 class="movie-title">@movie.Title</h3>
+                    <p class="movie-genre">@movie.Genre.ToString()</p>
+                    <p class="movie-description">@movie.Description</p>
+                    <p class="movie-budget">Budget: $@movie.Budget.ToString("N0")</p>
+                    <p class="movie-year">@movie.ReleaseDate.Year</p>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+
+@code
+{
+    List<MovieResponseDto>? MoviesList = new();
+    private bool isUsingPlaceholderData = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Call our own API endpoint using DTOs
+            MoviesList = await Http.GetFromJsonAsync<List<MovieResponseDto>>("api/movies");
+            Console.WriteLine($"Loaded {MoviesList?.Count ?? 0} movies from API");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading movies from API: {ex.Message}");
+            Console.WriteLine("Loading placeholder data...");
+            
+            // Load placeholder data when API is not available
+            MoviesList = GetPlaceholderMovies();
+            isUsingPlaceholderData = true;
+            Console.WriteLine($"Loaded {MoviesList.Count} placeholder movies");
+        }
+    }
+
+    private List<MovieResponseDto> GetPlaceholderMovies()
+    {
+        return new List<MovieResponseDto>
+        {
+            new MovieResponseDto(
+                "1", "The Matrix", new DateOnly(1999, 3, 31), Genre.ScienceFiction,
+                "A computer programmer discovers reality is a simulation and joins a rebellion against machines.",
+                "Warner Bros", new List<cse325_team7_project.Domain.ValueObjects.CastMember>(),
+                "https://via.placeholder.com/400x600/0066cc/ffffff?text=The+Matrix",
+                "https://via.placeholder.com/200x300/0066cc/ffffff?text=Matrix",
+                63000000m, DateTime.UtcNow.AddDays(-30), DateTime.UtcNow.AddDays(-30)
+            ),
+            new MovieResponseDto(
+                "2", "Inception", new DateOnly(2010, 7, 16), Genre.ScienceFiction,
+                "A thief who steals corporate secrets through dream-sharing technology is given the inverse task of planting an idea.",
+                "Warner Bros", new List<cse325_team7_project.Domain.ValueObjects.CastMember>(),
+                "https://via.placeholder.com/400x600/cc6600/ffffff?text=Inception",
+                "https://via.placeholder.com/200x300/cc6600/ffffff?text=Inception",
+                160000000m, DateTime.UtcNow.AddDays(-25), DateTime.UtcNow.AddDays(-25)
+            ),
+            new MovieResponseDto(
+                "3", "The Dark Knight", new DateOnly(2008, 7, 18), Genre.Action,
+                "Batman faces the Joker, a criminal mastermind who wants to plunge Gotham City into anarchy.",
+                "Warner Bros", new List<cse325_team7_project.Domain.ValueObjects.CastMember>(),
+                "https://via.placeholder.com/400x600/333333/ffffff?text=Dark+Knight",
+                "https://via.placeholder.com/200x300/333333/ffffff?text=Batman",
+                185000000m, DateTime.UtcNow.AddDays(-20), DateTime.UtcNow.AddDays(-20)
+            ),
+            new MovieResponseDto(
+                "4", "Pulp Fiction", new DateOnly(1994, 10, 14), Genre.Crime,
+                "The lives of two mob hitmen, a boxer, and others intertwine in four tales of violence and redemption.",
+                "Miramax", new List<cse325_team7_project.Domain.ValueObjects.CastMember>(),
+                "https://via.placeholder.com/400x600/990000/ffffff?text=Pulp+Fiction",
+                "https://via.placeholder.com/200x300/990000/ffffff?text=Pulp",
+                8500000m, DateTime.UtcNow.AddDays(-15), DateTime.UtcNow.AddDays(-15)
+            ),
+            new MovieResponseDto(
+                "5", "The Shawshank Redemption", new DateOnly(1994, 9, 23), Genre.Drama,
+                "Two imprisoned men bond over years, finding solace and eventual redemption through acts of common decency.",
+                "Columbia Pictures", new List<cse325_team7_project.Domain.ValueObjects.CastMember>(),
+                "https://via.placeholder.com/400x600/006600/ffffff?text=Shawshank",
+                "https://via.placeholder.com/200x300/006600/ffffff?text=Shawshank",
+                25000000m, DateTime.UtcNow.AddDays(-10), DateTime.UtcNow.AddDays(-10)
+            ),
+            new MovieResponseDto(
+                "6", "Forrest Gump", new DateOnly(1994, 7, 6), Genre.Drama,
+                "The presidencies of Kennedy and Johnson through the eyes of an Alabama man with an IQ of 75.",
+                "Paramount Pictures", new List<cse325_team7_project.Domain.ValueObjects.CastMember>(),
+                "https://via.placeholder.com/400x600/0099cc/ffffff?text=Forrest+Gump",
+                "https://via.placeholder.com/200x300/0099cc/ffffff?text=Forrest",
+                55000000m, DateTime.UtcNow.AddDays(-5), DateTime.UtcNow.AddDays(-5)
+            ),
+            new MovieResponseDto(
+                "7", "Avatar", new DateOnly(2009, 12, 18), Genre.ScienceFiction,
+                "A paraplegic Marine dispatched to the moon Pandora on a unique mission becomes torn between following orders and protecting an alien civilization.",
+                "20th Century Fox", new List<cse325_team7_project.Domain.ValueObjects.CastMember>(),
+                "https://via.placeholder.com/400x600/0066ff/ffffff?text=Avatar",
+                "https://via.placeholder.com/200x300/0066ff/ffffff?text=Avatar",
+                237000000m, DateTime.UtcNow.AddDays(-3), DateTime.UtcNow.AddDays(-3)
+            ),
+            new MovieResponseDto(
+                "8", "Titanic", new DateOnly(1997, 12, 19), Genre.Romance,
+                "A seventeen-year-old aristocrat falls in love with a kind but poor artist aboard the luxurious, ill-fated R.M.S. Titanic.",
+                "Paramount Pictures", new List<cse325_team7_project.Domain.ValueObjects.CastMember>(),
+                "https://via.placeholder.com/400x600/003366/ffffff?text=Titanic",
+                "https://via.placeholder.com/200x300/003366/ffffff?text=Titanic",
+                200000000m, DateTime.UtcNow.AddDays(-2), DateTime.UtcNow.AddDays(-2)
+            ),
+            new MovieResponseDto(
+                "9", "The Lion King", new DateOnly(1994, 6, 24), Genre.Animation,
+                "A young lion prince flees his kingdom only to learn the true meaning of responsibility and bravery.",
+                "Walt Disney Pictures", new List<cse325_team7_project.Domain.ValueObjects.CastMember>(),
+                "https://via.placeholder.com/400x600/ff9900/ffffff?text=Lion+King",
+                "https://via.placeholder.com/200x300/ff9900/ffffff?text=Lion",
+                45000000m, DateTime.UtcNow.AddDays(-1), DateTime.UtcNow.AddDays(-1)
+            ),
+            new MovieResponseDto(
+                "10", "Jurassic Park", new DateOnly(1993, 6, 11), Genre.Adventure,
+                "A pragmatic paleontologist visiting an almost complete theme park is tasked with protecting a couple of kids after a power failure causes the park's cloned dinosaurs to run loose.",
+                "Universal Pictures", new List<cse325_team7_project.Domain.ValueObjects.CastMember>(),
+                "https://via.placeholder.com/400x600/669900/ffffff?text=Jurassic+Park",
+                "https://via.placeholder.com/200x300/669900/ffffff?text=Jurassic",
+                63000000m, DateTime.UtcNow, DateTime.UtcNow
+            )
+        };
+    }
+}
