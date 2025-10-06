@@ -13,6 +13,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+// Add HttpClient for Blazor components to call our own API
+builder.Services.AddHttpClient();
+
 // --- API layer ----------------------------------------------------------------
 // Enable controllers and insert our ObjectId binder at the front of the provider
 // pipeline so every action parameter of type ObjectId benefits from automatic
