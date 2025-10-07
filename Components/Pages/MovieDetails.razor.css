@@ -1,0 +1,39 @@
+.movie-details-container {
+  padding: 1rem;
+}
+
+.movie-details {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+
+.movie-details-image img {
+  width: 320px;
+  height: auto;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.movie-details-info {
+  max-width: 800px;
+}
+
+.movie-details-info h2 {
+  margin: 0 0 0.5rem 0;
+}
+
+.movie-details-genre,
+.movie-details-studio,
+.movie-details-budget {
+  margin: 0.25rem 0;
+  color: var(--bs-secondary-color, #666);
+}
+
+.movie-details-description {
+  margin-top: 1rem;
+}
+
+.movie-details-info ul {
+  padding-left: 1.2rem;
+}
