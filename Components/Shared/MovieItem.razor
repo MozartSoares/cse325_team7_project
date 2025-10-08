@@ -3,6 +3,11 @@
 @inject HttpClient HttpClient
 @inject NavigationManager Navigation
 
+@*
+    Displays a loading message if the movie data is not yet loaded.
+    Otherwise, renders a card with the movie's thumbnail and title,
+    wrapped in a NavLink to the movie's detail page.
+*@
 @if (movie == null)
 {
     <p>Loading...</p>
@@ -18,6 +23,12 @@ else
 }
 
 @code {
+    /// <summary>
+    /// Gets or sets the movie data to display.
+    /// </summary>
+    /// <value>
+    /// A <see cref="MovieResponseDto"/> containing the movie's details.
+    /// </value>
     [Parameter]
     public MovieResponseDto? movie { get; set; }
 

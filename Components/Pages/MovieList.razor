@@ -7,12 +7,20 @@
 <div class="list-page-container">
     <h1>Movie List</h1>
 
+    @*
+        Displays a loading message if the ID list is not yet processed.
+        Otherwise, renders a MovieListCollection component for each provided ID.
+    *@
     @if (IdList == null)
     {
         <p>Loading movies...</p>
     }
     else
-    {
+    {   
+        @*
+            Iterates through each ID in the processed IdList and renders
+            a MovieListCollection component for each valid ID.
+        *@
         foreach (var i in IdList)
         {
             <MovieListCollection movieListId=@i />
@@ -21,9 +29,28 @@
 </div>
 
 @code {
+    /// <summary>
+    /// Gets or sets the raw IDs string from the route.
+    /// This is a catch-all parameter that captures all segments after "/list/".
+    /// </summary>
+    /// <value>
+    /// A string containing all ID segments separated by slashes,
+    /// or an empty string if no IDs are provided.
+    /// </value>
     [Parameter]
     public string Ids { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Processes the raw IDs string into a list of valid movie list IDs.
+    /// </summary>
+    /// <value>
+    /// A list of non-empty ID strings extracted from the route,
+    /// or an empty list if no valid IDs are provided.
+    /// </value>
+    /// <remarks>
+    /// If the route is "/list/", returns an empty list.
+    /// If the route is "/list/id1/id2/id3", returns ["id1", "id2", "id3"].
+    /// </remarks>
     private List<string> IdList =>
     string.IsNullOrEmpty(Ids)
     ? new List<string>()

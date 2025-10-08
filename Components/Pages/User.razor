@@ -6,6 +6,11 @@
 <div class="user-detail-container">
     <h1>Profile Details</h1>
 
+    
+    @*
+        Displays a loading message if user data is not yet loaded.
+        Otherwise, renders the user's profile details.
+    *@
     @if (userData == null)
     {
         <p>Loading...</p>
@@ -13,7 +18,11 @@
     else
     {
         <div class="user-info-grid">
+            <!-- Displays the first letter of the username as a profile initial -->
             <div class="profile-circle">@GetInitial(userData.Username)</div>
+
+
+            <!-- Displays user details in a definition list -->
             <div class="user-details">
                 <dl>
                     <dt>User ID:</dt>
@@ -38,14 +47,23 @@
                     <dd>@userData.UpdatedAt.ToString("g")</dd>
                 </dl>
             </div>
+
+            <!-- Action buttons for editing and deleting the profile -->
             <div class="action-buttons">
                 <button class="edit-button">Edit</button>
                 <button class="delete-button">Delete</button>
             </div>
         </div>
 
+        <!-- Section for displaying the user's movie lists -->
         <h2>Lists</h2>
         
+        
+        @*
+            Checks if the user has any lists.
+            If yes, renders a MovieListCollection component for each list.
+            If no, displays a message indicating no lists are available.
+        *@
         @if (userData.Lists != null && userData.Lists.Any())
         {
             foreach (var list in userData.Lists)
@@ -61,26 +79,53 @@
 </div>
 
 @code {
+    /// <summary>
+    /// Gets or sets the user ID from the route parameter.
+    /// </summary>
+    /// <value>
+    /// The unique identifier for the user, passed as a route parameter.
+    /// </value>
     [Parameter]
     public string? id { get; set; }
 
+    /// <summary>
+    /// Stores the user data fetched from the API.
+    /// </summary>
     private UserResponseDto? userData;
 
+    /// <summary>
+    /// Fetches user data from the API when the component initializes.
+    /// Falls back to placeholder data if an error occurs.
+    /// </summary>
     protected override async Task OnInitializedAsync()
     {
         try
-        {
+        {   
+            // Fetch user data from the API using the provided ID
             userData = await HttpClient.GetFromJsonAsync<UserResponseDto>($"api/user/{id}");
         }
         catch (Exception ex)
-        {
+        {   
+            // Log the error and use placeholder data if the API call fails
             Console.WriteLine($"Error loading user from API: {ex.Message}");
             userData = GetPlaceholderUser();
         }
     }
 
+    /// <summary>
+    /// Generates placeholder user data for error fallback.
+    /// </summary>
+    /// <returns>A <see cref="UserResponseDto"/> with mock data.</returns>
     private UserResponseDto GetPlaceholderUser() => MockData.GetPlaceholderUser();
 
+    /// <summary>
+    /// Extracts the first character of a username to use as a profile initial.
+    /// </summary>
+    /// <param name="username">The username to extract the initial from.</param>
+    /// <returns>
+    /// The first character of the username as an uppercase string,
+    /// or an empty string if the username is null or whitespace.
+    /// </returns>
     private string GetInitial(string username)
     {
         return string.IsNullOrWhiteSpace(username) ? string.Empty : username[0].ToString().ToUpper();
