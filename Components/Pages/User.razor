@@ -79,19 +79,7 @@
         }
     }
 
-    private UserResponseDto GetPlaceholderUser()
-    {
-        return new UserResponseDto(
-        Id: "123456",
-        Username: "Johndoe",
-        Name: "John Doe",
-        Email: "mockuser@example.com",
-        Lists: new List<string> { "List1" },
-        Role: UserRole.User,
-        CreatedAt: DateTime.Now.AddDays(-30),
-        UpdatedAt: DateTime.Now
-        );
-    }
+    private UserResponseDto GetPlaceholderUser() => MockData.GetPlaceholderUser();
 
     private string GetInitial(string username)
     {
