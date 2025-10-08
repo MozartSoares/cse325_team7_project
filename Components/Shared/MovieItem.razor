@@ -1,0 +1,24 @@
+@using cse325_team7_project.Api.DTOs
+@using cse325_team7_project.Domain.Enums
+@inject HttpClient HttpClient
+@inject NavigationManager Navigation
+
+@if (movie == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <NavLink class="nav-link" href="@($"/movies/{movie.Id}")" aria-label="@($"View details for {movie.Title}")">     
+       <div class="movie-card">
+            <img class="movie-image" src="@movie.ThumbnailImage" alt="@movie.Title" />
+            <div class="movie-title">@movie.Title</div>
+        </div>
+    </NavLink>
+}
+
+@code {
+    [Parameter]
+    public MovieResponseDto? movie { get; set; }
+
+}

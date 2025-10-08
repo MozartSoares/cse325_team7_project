@@ -1,0 +1,31 @@
+@page "/list/"
+@page "/list/{*ids}"
+
+@using cse325_team7_project.Api.DTOs
+@using cse325_team7_project.Domain.Enums
+
+<div class="list-page-container">
+    <h1>Movie List</h1>
+
+    @if (IdList == null)
+    {
+        <p>Loading movies...</p>
+    }
+    else
+    {
+        foreach (var i in IdList)
+        {
+            <MovieListCollection movieListId=@i />
+        }
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string Ids { get; set; } = string.Empty;
+
+    private List<string> IdList =>
+    string.IsNullOrEmpty(Ids)
+    ? new List<string>()
+    : Ids.Split('/').Where(x => !string.IsNullOrEmpty(x)).ToList();
+}

@@ -1,0 +1,100 @@
+@page "/user/{id?}"
+@using cse325_team7_project.Api.DTOs
+@using cse325_team7_project.Domain.Enums
+@inject HttpClient HttpClient
+
+<div class="user-detail-container">
+    <h1>Profile Details</h1>
+
+    @if (userData == null)
+    {
+        <p>Loading...</p>
+    }
+    else
+    {
+        <div class="user-info-grid">
+            <div class="profile-circle">@GetInitial(userData.Username)</div>
+            <div class="user-details">
+                <dl>
+                    <dt>User ID:</dt>
+                    <dd>@userData.Id</dd>
+
+                    <dt>Username:</dt>
+                    <dd>@userData.Username</dd>
+
+                    <dt>Name:</dt>
+                    <dd>@userData.Name</dd>
+
+                    <dt>Email:</dt>
+                    <dd>@userData.Email</dd>
+
+                    <dt>Role:</dt>
+                    <dd>@userData.Role</dd>
+
+                    <dt>Created At:</dt>
+                    <dd>@userData.CreatedAt.ToString("g")</dd>
+
+                    <dt>Updated At:</dt>
+                    <dd>@userData.UpdatedAt.ToString("g")</dd>
+                </dl>
+            </div>
+            <div class="action-buttons">
+                <button class="edit-button">Edit</button>
+                <button class="delete-button">Delete</button>
+            </div>
+        </div>
+
+        <h2>Lists</h2>
+        
+        @if (userData.Lists != null && userData.Lists.Any())
+        {
+            foreach (var list in userData.Lists)
+            {   
+                <MovieListCollection movieListId=@list />
+            }
+        }
+        else
+        {
+            <p>No lists available for this user.</p>
+        }
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string? id { get; set; }
+
+    private UserResponseDto? userData;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            userData = await HttpClient.GetFromJsonAsync<UserResponseDto>($"api/user/{id}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading user from API: {ex.Message}");
+            userData = GetPlaceholderUser();
+        }
+    }
+
+    private UserResponseDto GetPlaceholderUser()
+    {
+        return new UserResponseDto(
+        Id: "123456",
+        Username: "Johndoe",
+        Name: "John Doe",
+        Email: "mockuser@example.com",
+        Lists: new List<string> { "List1" },
+        Role: UserRole.User,
+        CreatedAt: DateTime.Now.AddDays(-30),
+        UpdatedAt: DateTime.Now
+        );
+    }
+
+    private string GetInitial(string username)
+    {
+        return string.IsNullOrWhiteSpace(username) ? string.Empty : username[0].ToString().ToUpper();
+    }
+}
