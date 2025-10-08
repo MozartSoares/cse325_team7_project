@@ -15,7 +15,7 @@ public interface IMoviesListService
     Task<MoviesList> Get(ObjectId id);
 
     /// <summary>Creates a new list after validating referenced movies.</summary>
-    Task<MoviesList> Create(MoviesList list);
+    Task<MoviesList> Create(MoviesList list, ObjectId ownerId);
 
     /// <summary>Replaces an existing list after validating movie references.</summary>
     Task<MoviesList> Update(ObjectId id, MoviesList update);

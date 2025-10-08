@@ -1,6 +1,8 @@
 using cse325_team7_project.Api.DTOs;
 using cse325_team7_project.Api.Mappings;
 using cse325_team7_project.Api.Services.Interfaces;
+using cse325_team7_project.Domain.Enums;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 
@@ -13,14 +15,17 @@ public class MoviesController(IMovieService service) : ControllerBase
     private readonly IMovieService _service = service;
 
     [HttpGet]
+    [AllowAnonymous]
     public async Task<ActionResult<IEnumerable<MovieResponseDto>>> GetAll()
         => Ok((await _service.List()).Select(m => m.ToDto()));
 
     [HttpGet("{id}")]
+    [AllowAnonymous]
     public async Task<ActionResult<MovieResponseDto>> GetById(ObjectId id)
         => Ok((await _service.Get(id)).ToDto());
 
     [HttpPost]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<ActionResult<MovieResponseDto>> Create([FromBody] MovieCreateDto dto)
     {
         var created = await _service.Create(dto.ToModel());
@@ -28,6 +33,7 @@ public class MoviesController(IMovieService service) : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<ActionResult<MovieResponseDto>> Update(ObjectId id, [FromBody] MovieUpdateDto dto)
     {
         var current = await _service.Get(id);
@@ -37,6 +43,7 @@ public class MoviesController(IMovieService service) : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> Delete(ObjectId id)
     {
         var ok = await _service.Delete(id);

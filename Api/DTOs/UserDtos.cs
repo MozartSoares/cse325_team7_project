@@ -6,15 +6,21 @@ public record UserCreateDto(
     string Username,
     string Name,
     string Email,
-    List<string>? Lists,
+    string Password
+);
+
+//only used by admin
+public record UserCreateAdminDto(
+    string Username,
+    string Name,
+    string Email,
+    string Password,
     UserRole Role
 );
 
 public record UserUpdateDto(
     string Name,
-    string Email,
-    List<string>? Lists,
-    UserRole Role
+    string Email
 );
 
 public record UserResponseDto(

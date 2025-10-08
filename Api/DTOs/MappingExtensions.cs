@@ -3,6 +3,7 @@ using cse325_team7_project.Api.Services.Interfaces;
 using cse325_team7_project.Domain.Models;
 using cse325_team7_project.Domain.ValueObjects;
 using MongoDB.Bson;
+using cse325_team7_project.Domain.Enums;
 
 namespace cse325_team7_project.Api.Mappings;
 
@@ -79,7 +80,18 @@ public static class MappingExtensions
             Username = dto.Username,
             Name = dto.Name,
             Email = dto.Email,
-            Lists = dto.Lists?.Where(s => ObjectId.TryParse(s, out _)).Select(ObjectId.Parse).ToList() ?? [],
+            Lists = [],
+            Role = UserRole.User
+        };
+    }
+
+    public static User ToModel(this UserCreateAdminDto dto)
+    {
+        return new User
+        {
+            Username = dto.Username,
+            Name = dto.Name,
+            Email = dto.Email,
             Role = dto.Role
         };
     }
@@ -88,8 +100,6 @@ public static class MappingExtensions
     {
         target.Name = dto.Name;
         target.Email = dto.Email;
-        target.Lists = dto.Lists?.Where(s => ObjectId.TryParse(s, out _)).Select(ObjectId.Parse).ToList() ?? target.Lists;
-        target.Role = dto.Role;
     }
 
     // MoviesList

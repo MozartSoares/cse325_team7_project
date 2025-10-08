@@ -3,12 +3,14 @@ using cse325_team7_project.Api.Options;
 using cse325_team7_project.Api.Services;
 using cse325_team7_project.Api.Services.Interfaces;
 using cse325_team7_project.Domain.Models;
+using cse325_team7_project.Api.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Http;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
 using System.Text;
+using cse325_team7_project.Domain.Enums;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -100,7 +102,14 @@ builder.Services
     });
 
 builder.Services.AddAuthorizationBuilder()
-    .AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
+    .AddPolicy("AdminOnly", policy => policy.RequireAssertion(ctx => ctx.User.IsAdmin()))
+    .AddPolicy("SelfOrAdmin", policy => policy.RequireAssertion(ctx =>
+    {
+        var http = (ctx.Resource as Microsoft.AspNetCore.Mvc.Filters.AuthorizationFilterContext)?.HttpContext ?? ctx.Resource as HttpContext;
+        var routeId = http?.Request?.RouteValues?["id"]?.ToString();
+        if (!MongoDB.Bson.ObjectId.TryParse(routeId, out var targetId)) return false;
+        return ctx.User.IsSelfOrAdmin(targetId);
+    }));
 
 // --- Data layer ---------------------------------------------------------------
 // Resolve MongoDB dependencies via DI. These registrations make the actual
@@ -154,5 +163,29 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 app.MapControllers();
+
+// --- Database bootstrap (indexes) -------------------------------------------
+using (var scope = app.Services.CreateScope())
+{
+    try
+    {
+        var users = scope.ServiceProvider.GetRequiredService<IMongoCollection<User>>();
+        var collation = new MongoDB.Driver.Collation("en", strength: MongoDB.Driver.CollationStrength.Secondary);
+        var usernameIndex = new CreateIndexModel<User>(
+            Builders<User>.IndexKeys.Ascending(u => u.Username),
+            new CreateIndexOptions { Unique = true, Name = "uq_users_username", Collation = collation }
+        );
+        var emailIndex = new CreateIndexModel<User>(
+            Builders<User>.IndexKeys.Ascending(u => u.Email),
+            new CreateIndexOptions { Unique = true, Name = "uq_users_email", Collation = collation }
+        );
+
+        users.Indexes.CreateMany(new[] { usernameIndex, emailIndex });
+    }
+    catch (Exception)
+    {
+        // Index creation is best-effort at startup.
+    }
+}
 
 app.Run();

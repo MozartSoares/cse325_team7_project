@@ -1,6 +1,12 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using cse325_team7_project.Api.Common;
 using cse325_team7_project.Api.DTOs;
 using cse325_team7_project.Api.Mappings;
 using cse325_team7_project.Api.Services.Interfaces;
+using cse325_team7_project.Domain.Enums;
+using cse325_team7_project.Api.Security;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 
@@ -8,19 +14,35 @@ namespace cse325_team7_project.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class UsersController(IUserService service) : ControllerBase
+public class UsersController(IUserService service, IAuthService auth) : ControllerBase
 {
     private readonly IUserService _service = service;
+    private readonly IAuthService _auth = auth;
+
 
     [HttpGet]
+    [AllowAnonymous]
     public async Task<ActionResult<IEnumerable<UserResponseDto>>> GetAll()
         => Ok((await _service.List()).Select(u => u.ToDto()));
 
     [HttpGet("{id}")]
+    [AllowAnonymous]
     public async Task<ActionResult<UserResponseDto>> GetById(ObjectId id)
         => Ok((await _service.Get(id)).ToDto());
 
+    [HttpPost]
+    [Authorize(Policy = "AdminOnly")]
+    public async Task<ActionResult<UserResponseDto>> Create([FromBody] UserCreateAdminDto dto)
+    {
+        var result = await _auth.Register(dto.Username, dto.Name, dto.Email, dto.Password);
+        var created = result.User;
+        created.Role = dto.Role;
+        created = await _service.Update(created.Id, created);
+        return CreatedAtAction(nameof(GetById), new { id = created.Id.ToString() }, created.ToDto());
+    }
+
     [HttpPut("{id}")]
+    [Authorize(Policy = "SelfOrAdmin")]
     public async Task<ActionResult<UserResponseDto>> Update(ObjectId id, [FromBody] UserUpdateDto dto)
     {
         var current = await _service.Get(id);
@@ -30,6 +52,7 @@ public class UsersController(IUserService service) : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Policy = "SelfOrAdmin")]
     public async Task<IActionResult> Delete(ObjectId id)
     {
         var ok = await _service.Delete(id);
