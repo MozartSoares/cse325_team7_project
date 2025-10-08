@@ -23,3 +23,7 @@ public class ValidationException(string message) : HttpException(StatusCodes.Sta
 public class BadRequestException(string message) : HttpException(StatusCodes.Status400BadRequest, message)
 {
 }
+
+public class UnauthorizedException(string message) : HttpException(StatusCodes.Status401Unauthorized, message)
+{
+}

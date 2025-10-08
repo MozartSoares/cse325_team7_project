@@ -1,4 +1,5 @@
 using cse325_team7_project.Api.DTOs;
+using cse325_team7_project.Api.Services.Interfaces;
 using cse325_team7_project.Domain.Models;
 using cse325_team7_project.Domain.ValueObjects;
 using MongoDB.Bson;
@@ -7,6 +8,9 @@ namespace cse325_team7_project.Api.Mappings;
 
 /// <summary>
 /// Centralizes conversions between API DTOs and domain models so controllers stay focused on orchestration.
+/// toDto: converts a domain model to a DTO -> list, get
+/// toModel: converts a DTO to a domain model -> create
+/// apply: applies a DTO to a domain model -> update
 /// </summary>
 public static class MappingExtensions
 {
@@ -74,7 +78,6 @@ public static class MappingExtensions
         {
             Username = dto.Username,
             Name = dto.Name,
-            PasswordHash = dto.PasswordHash,
             Email = dto.Email,
             Lists = dto.Lists?.Where(s => ObjectId.TryParse(s, out _)).Select(ObjectId.Parse).ToList() ?? [],
             Role = dto.Role
@@ -84,10 +87,6 @@ public static class MappingExtensions
     public static void Apply(this User target, UserUpdateDto dto)
     {
         target.Name = dto.Name;
-        if (!string.IsNullOrWhiteSpace(dto.PasswordHash))
-        {
-            target.PasswordHash = dto.PasswordHash!;
-        }
         target.Email = dto.Email;
         target.Lists = dto.Lists?.Where(s => ObjectId.TryParse(s, out _)).Select(ObjectId.Parse).ToList() ?? target.Lists;
         target.Role = dto.Role;
@@ -116,4 +115,17 @@ public static class MappingExtensions
         target.Title = dto.Title;
         target.Movies = dto.Movies?.Where(s => ObjectId.TryParse(s, out _)).Select(ObjectId.Parse).ToList() ?? target.Movies;
     }
+
+    // Auth
+    public static (string Username, string Name, string Email, string Password) ToRegisterInput(this AuthRegisterDto dto)
+        => (dto.Username, dto.Name, dto.Email, dto.Password);
+
+    public static (string UsernameOrEmail, string Password) ToLoginInput(this AuthLoginDto dto)
+        => (dto.UsernameOrEmail, dto.Password);
+
+    public static AuthResponseDto ToDto(this AuthResult result) => new(
+        result.AccessToken,
+        result.ExpiresAt,
+        result.User.ToDto()
+    );
 }

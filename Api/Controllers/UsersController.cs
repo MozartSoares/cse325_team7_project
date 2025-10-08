@@ -20,14 +20,6 @@ public class UsersController(IUserService service) : ControllerBase
     public async Task<ActionResult<UserResponseDto>> GetById(ObjectId id)
         => Ok((await _service.Get(id)).ToDto());
 
-    [HttpPost]
-    //todo: remove and implement auth
-    public async Task<ActionResult<UserResponseDto>> Create([FromBody] UserCreateDto dto)
-    {
-        var created = await _service.Create(dto.ToModel());
-        return CreatedAtAction(nameof(GetById), new { id = created.Id.ToString() }, created.ToDto());
-    }
-
     [HttpPut("{id}")]
     public async Task<ActionResult<UserResponseDto>> Update(ObjectId id, [FromBody] UserUpdateDto dto)
     {

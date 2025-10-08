@@ -5,7 +5,6 @@ namespace cse325_team7_project.Api.DTOs;
 public record UserCreateDto(
     string Username,
     string Name,
-    string PasswordHash,
     string Email,
     List<string>? Lists,
     UserRole Role
@@ -13,7 +12,6 @@ public record UserCreateDto(
 
 public record UserUpdateDto(
     string Name,
-    string? PasswordHash,
     string Email,
     List<string>? Lists,
     UserRole Role
@@ -29,4 +27,3 @@ public record UserResponseDto(
     DateTime CreatedAt,
     DateTime UpdatedAt
 );
-

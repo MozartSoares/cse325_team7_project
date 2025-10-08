@@ -1,8 +1,10 @@
 using cse325_team7_project.Components;
+using cse325_team7_project.Api.Options;
 using cse325_team7_project.Api.Services;
 using cse325_team7_project.Api.Services.Interfaces;
 using cse325_team7_project.Domain.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Http;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
@@ -44,6 +46,8 @@ var jwtSection = builder.Configuration.GetSection("Jwt");
 var jwtIssuer = jwtSection["Issuer"] ?? "local";
 var jwtAudience = jwtSection["Audience"] ?? jwtIssuer;
 var jwtKey = jwtSection["Key"] ?? "CHANGE_ME_DEV_ONLY_SUPER_SECRET_KEY_32+CHARS";
+
+builder.Services.Configure<JwtOptions>(jwtSection);
 
 builder.Services
 
@@ -122,6 +126,8 @@ builder.Services.AddSingleton<IMongoCollection<MoviesList>>(sp => sp.GetRequired
 builder.Services.AddScoped<IMovieService, MovieService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IMoviesListService, MoviesListService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 
 var app = builder.Build();
 
