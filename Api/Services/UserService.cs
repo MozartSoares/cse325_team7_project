@@ -39,6 +39,11 @@ public class UserService(IMongoCollection<User> users) : IUserService
         var existsEmail = await _users.Find(u => u.Email.Equals(user.Email, StringComparison.OrdinalIgnoreCase)).AnyAsync();
         if (existsEmail) throw new ConflictException($"Email '{user.Email}' already exists");
 
+        if (string.IsNullOrWhiteSpace(user.PasswordHash))
+        {
+            throw new ValidationException("Password hash is required when creating a user.");
+        }
+
         user.UpdatedAt = DateTime.UtcNow;
         await _users.InsertOneAsync(user);
         return user;

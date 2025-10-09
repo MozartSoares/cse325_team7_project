@@ -10,11 +10,11 @@ namespace cse325_team7_project.Api.Services;
 /// MongoDB implementation of <see cref="IMoviesListService"/>.
 /// Validates referenced movie ids to keep list documents consistent.
 /// </summary>
-public class MoviesListService(IMongoCollection<MoviesList> lists, IMongoCollection<Movie> movies) : IMoviesListService
+public class MoviesListService(IMongoCollection<MoviesList> lists, IMongoCollection<Movie> movies, IMongoCollection<User> users) : IMoviesListService
 {
     private readonly IMongoCollection<MoviesList> _lists = lists;
     private readonly IMongoCollection<Movie> _movies = movies;
-
+    private readonly IMongoCollection<User> _users = users;
     /// <inheritdoc />
     public async Task<IReadOnlyList<MoviesList>> List()
     {
@@ -30,11 +30,14 @@ public class MoviesListService(IMongoCollection<MoviesList> lists, IMongoCollect
     }
 
     /// <inheritdoc />
-    public async Task<MoviesList> Create(MoviesList list)
+    public async Task<MoviesList> Create(MoviesList list,ObjectId ownerId)
     {
         await ValidateMovieIds(list.Movies);
         list.UpdatedAt = DateTime.UtcNow;
         await _lists.InsertOneAsync(list);
+        var owner = await _users.Find(u => u.Id == ownerId).FirstOrDefaultAsync() ?? throw new NotFoundException($"Owner {ownerId} not found");
+        owner.Lists.Add(list.Id);
+        await _users.ReplaceOneAsync(u => u.Id == ownerId, owner);
         return list;
     }
 

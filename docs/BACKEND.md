@@ -57,6 +57,14 @@ REST endpoints are exposed via:
 
 Actions accept DTOs, delegate to services, and return DTOs. They do not contain manual validations or try/catch blocks thanks to the shared middleware and binder.
 
+## Authentication/Authorization
+
+JWT Bearer authentication is configured and integrated into the pipeline. Authentication endpoints:
+
+- `POST /api/auth/register` (anonymous): Creates a user (default role is `User`) and returns a JWT plus its expiration.
+- `POST /api/auth/login` (anonymous): Authenticates a user and returns a JWT plus its expiration.
+- `GET /api/auth/me` (authenticated): Returns the user associated with the provided token.
+
 ### Error Handling & Binding
 
 - `Api/Common/Errors.cs` introduces `HttpException` and specific derivatives (`NotFoundException`, `ConflictException`, `ValidationException`, `BadRequestException`). Services and infrastructure throw these to signal business conditions.
@@ -74,6 +82,8 @@ Actions accept DTOs, delegate to services, and return DTOs. They do not contain 
 - Registers scoped services for each aggregate (`MovieService`, `UserService`, `MoviesListService`).
 - Adds `ErrorHandlingMiddleware` before antiforgery/static assets so every request benefits from consistent error responses.
 - Maps controllers and keeps the existing Blazor pipeline intact.
+- Habilita autenticação/autorização (`UseAuthentication`/`UseAuthorization`) e configura JWT.
+- Cria índices únicos (case-insensitive) em `users.username` e `users.email` no startup.
 
 ## Error Responses
 
@@ -93,9 +103,9 @@ Actions accept DTOs, delegate to services, and return DTOs. They do not contain 
    - Add service interface/implementation following existing patterns (use Mongo collection and throw the appropriate `HttpException`).
    - Add controller exposing the HTTP contract.
 2. **Add Mongo indexes**
-   - Extend `Program.cs` or a future infrastructure layer to create indexes on startup (for example, unique indexes on `users.username` and `users.email`).
+   - Já implementado: índices únicos (case-insensitive) para `users.username` e `users.email` no startup.
 3. **Authentication/Authorization**
-   - Plug ASP.NET Core authentication middleware and add `[Authorize]` attributes to controllers as the next increment.
+   - Já configurado. Próximos incrementos: políticas "SelfOrAdmin" dedicadas, refresh tokens e revogação.
 4. **Testing**
    - Create integration tests using `WebApplicationFactory` and either an in-memory Mongo instance (e.g., Mongo2Go) or a test container.
 
@@ -115,6 +125,10 @@ Actions accept DTOs, delegate to services, and return DTOs. They do not contain 
 2. Restore & build: `dotnet restore && dotnet build`.
 3. Run: `dotnet run` (API available at `https://localhost:5001`, UI at the root).
 4. Test endpoints with cURL/Postman using the DTO shapes defined in `/Api/DTOs`.
+
+### Indexes
+
+No startup são criados índices únicos para reforçar unicidade: `users.username` e `users.email` (collation com `strength=2` para case-insensitive).
 
 ## Recent Changes (Commits `6e900bf` and `a8c55c5`)
 
