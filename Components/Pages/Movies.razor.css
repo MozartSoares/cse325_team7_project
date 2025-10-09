@@ -110,3 +110,18 @@
     font-size: 0.8rem;
     margin: 0;
 }
+
+.movie-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.movie-link .movie-card {
+    height: 100%;
+}
+
+.view-button {
+    margin-top: 10px;
+    align-self: flex-start;
+}
