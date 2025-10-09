@@ -11,6 +11,7 @@ using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
 using System.Text;
 using cse325_team7_project.Domain.Enums;
+using cse325_team7_project.Api.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -114,15 +115,19 @@ builder.Services.AddAuthorizationBuilder()
 // --- Data layer ---------------------------------------------------------------
 // Resolve MongoDB dependencies via DI. These registrations make the actual
 // connection configuration explicit and keep services simple to test/mock.
-var mongoConfig = builder.Configuration.GetSection("Mongo");
+var mongoSection = builder.Configuration.GetSection("Mongo");
 builder.Services.AddSingleton<IMongoClient>(sp =>
 {
-    var cs = mongoConfig["ConnectionString"] ?? "mongodb://localhost:27017";
+    var config = sp.GetRequiredService<IConfiguration>();
+    var logger = sp.GetRequiredService<ILogger<Program>>();
+    logger.LogInformation("MongoDB connection string: {ConnectionString}", mongoSection["ConnectionString"]);
+    var cs = mongoSection["ConnectionString"] ?? throw new InvalidOperationException("MongoDB connection string is not set");
     return new MongoClient(cs);
 });
 builder.Services.AddSingleton(sp =>
 {
-    var dbName = mongoConfig["Database"] ?? "moviehub";
+    var config = sp.GetRequiredService<IConfiguration>();
+    var dbName = mongoSection["Database"] ?? "moviehub";
     return sp.GetRequiredService<IMongoClient>().GetDatabase(dbName);
 });
 builder.Services.AddSingleton<IMongoCollection<Movie>>(sp => sp.GetRequiredService<IMongoDatabase>().GetCollection<Movie>("movies"));
