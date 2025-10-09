@@ -1,0 +1,96 @@
+@using cse325_team7_project.Api.DTOs
+@using cse325_team7_project.Domain.Enums
+@using cse325_team7_project.Domain.ValueObjects
+@inject HttpClient HttpClient
+
+@*
+    Displays a loading message if the movie list or all movies are not yet loaded.
+    Otherwise, renders the movie list container with its title, a copy button,
+    and a grid of movie cards for each movie in the list.
+*@
+@if (movieList == null || allMovies == null)
+{
+    <p>Loading movies...</p>
+}
+else
+{
+    <div class="movie-list-container">
+        <div class="movie-list-header">
+            <span>@movieList.Title</span>
+            <button class="movie-copy-button">Copy Link</button>
+        </div>
+
+        <div class="movie-list">
+            @*
+                Iterates through each movie ID in the list.
+                For each ID, finds the matching movie in allMovies and renders a MovieItem component.
+            *@
+            @foreach (var id in movieList.Movies)
+            {
+                // Check if the movie ID matches any of the IDs in allMovies
+                var movie = allMovies.FirstOrDefault(m => m.Id == id);
+                if (movie != null) // Only render the MovieItem if there's a match
+                {
+                    <MovieItem movie=@movie />
+                }
+            }
+        </div>
+    </div>
+}
+
+@code {
+    /// <summary>
+    /// Gets or sets the ID of the movie list to display.
+    /// </summary>
+    /// <value>
+    /// The unique identifier for the movie list, passed as a parameter.
+    /// </value>
+    [Parameter]
+    public string? movieListId { get; set; }
+
+    /// <summary>
+    /// Stores the full list of movies fetched from the API.
+    /// </summary>
+    private List<MovieResponseDto>? allMovies { get; set; }
+
+    /// <summary>
+    /// Stores the details of the movie list fetched from the API.
+    /// </summary>
+    private MoviesListResponseDto? movieList { get; set; }
+
+    /// <summary>
+    /// Fetches movie and list data from the API when the component initializes.
+    /// Falls back to placeholder data if an error occurs.
+    /// </summary>
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {   
+            // Fetch all movies from the API
+            allMovies = await HttpClient.GetFromJsonAsync<List<MovieResponseDto>>($"api/movies");
+            // Fetch the specific movie list from the API
+            movieList = await HttpClient.GetFromJsonAsync<MoviesListResponseDto>($"api/lists/{movieListId}");
+
+        }
+        catch (Exception ex)
+        {   
+            // Log the error and use placeholder data if the API call fails
+            Console.WriteLine($"Error loading movies from API: {ex.Message}");
+            allMovies = GetPlaceholderMovies();
+            movieList = GetPlaceholderList();
+        }
+    }
+
+    
+    /// <summary>
+    /// Generates placeholder movie data for error fallback.
+    /// </summary>
+    /// <returns>A list of placeholder movies.</returns>
+    private List<MovieResponseDto> GetPlaceholderMovies() => MockData.GetPlaceholderMovies();
+    
+    /// <summary>
+    /// Generates placeholder movie list data for error fallback.
+    /// </summary>
+    /// <returns>A placeholder movie list.</returns>
+    private MoviesListResponseDto GetPlaceholderList() => MockData.GetPlaceholderList();
+}
