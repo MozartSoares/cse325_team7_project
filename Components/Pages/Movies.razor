@@ -1,3 +1,5 @@
+@page "/movies"
+@rendermode InteractiveServer
 @using cse325_team7_project.Api.DTOs
 @using cse325_team7_project.Domain.Enums
 @inject HttpClient Http
@@ -5,18 +7,60 @@
 
 
 <h1 class="movie-label">Movies @(isUsingPlaceholderData ? "(Demo Data)" : "")</h1>
+
+<div class="search-container">
+    <input type="text" class="search-bar" value="@searchTerm" @oninput="OnSearchInput" placeholder="Search movies by title, description, or genre..." />
+    @if (!string.IsNullOrWhiteSpace(searchTerm))
+    {
+        <button class="clear-search-btn" @onclick="ClearSearch" title="Clear search">✕</button>
+    }
+</div>
+
+<div class="search-results-info">
+    @if (!string.IsNullOrWhiteSpace(searchTerm))
+    {
+        <p class="search-info">
+            @if (MoviesList?.Count > 0)
+            {
+                <span>Found @MoviesList.Count movie(s) matching "@searchTerm"</span>
+            }
+            else
+            {
+                <span>No movies found matching "@searchTerm"</span>
+            }
+        </p>
+    }
+    else if (AllMovies?.Count > 0)
+    {
+        <p class="search-info">Showing all @AllMovies.Count movies</p>
+    }
+</div>
+
 <div class="movie-cards">
     @if (MoviesList == null)
     {
         <p>Loading movies...</p>
     }
-    else if (MoviesList.Count == 0)
+    else if (MoviesList.Count == 0 && string.IsNullOrWhiteSpace(searchTerm))
     {
         <p>No movies found in database.</p>
     }
+    else if (MoviesList.Count == 0 && !string.IsNullOrWhiteSpace(searchTerm))
+    {
+        <div class="no-results">
+            <p>No movies match your search criteria.</p>
+            <p>Try searching for:</p>
+            <ul>
+                <li>Movie titles (e.g., "Matrix", "Inception")</li>
+                <li>Genres (e.g., "Action", "Drama", "Comedy")</li>
+                <li>Keywords from descriptions</li>
+            </ul>
+        </div>
+        <button class="btn btn-secondary" @onclick="ClearSearch">Show All Movies</button>
+    }
     else
     {
-        @foreach (var movie in MoviesList)
+        @foreach (var movie in PaginatedMovies)
         {
             <a class="movie-link" href="/movies/@movie.Id">
                 <div class="movie-card">
@@ -37,19 +81,71 @@
     }
 </div>
 
+@if (MoviesList?.Count > 0 && TotalPages > 1)
+{
+    <div class="pagination-container">
+        <div class="pagination-info">
+            <span>Page @CurrentPage of @TotalPages (@MoviesList.Count total movies)</span>
+        </div>
+        <div class="pagination-controls">
+            <button class="pagination-btn" @onclick="FirstPage" disabled="@(CurrentPage == 1)">
+                ⟪ First
+            </button>
+            <button class="pagination-btn" @onclick="PreviousPage" disabled="@(CurrentPage == 1)">
+                ‹ Previous
+            </button>
+            
+            @for (int i = StartPage; i <= EndPage; i++)
+            {
+                var pageNumber = i;
+                <button class="pagination-btn @(CurrentPage == pageNumber ? "active" : "")" 
+                        @onclick="() => GoToPage(pageNumber)">
+                    @pageNumber
+                </button>
+            }
+            
+            <button class="pagination-btn" @onclick="NextPage" disabled="@(CurrentPage == TotalPages)">
+                Next ›
+            </button>
+            <button class="pagination-btn" @onclick="LastPage" disabled="@(CurrentPage == TotalPages)">
+                Last ⟫
+            </button>
+        </div>
+    </div>
+}
+
 
 @code
 {
     List<MovieResponseDto>? MoviesList = new();
+    List<MovieResponseDto>? AllMovies = new();
     private bool isUsingPlaceholderData = false;
+    private string searchTerm = "";
+    
+    // Pagination properties
+    private int CurrentPage = 1;
+    private int PageSize = 8;
+    private int TotalPages => MoviesList != null && MoviesList.Count > 0 
+        ? (int)Math.Ceiling(MoviesList.Count / (double)PageSize) 
+        : 1;
+    
+    private List<MovieResponseDto> PaginatedMovies => MoviesList?
+        .Skip((CurrentPage - 1) * PageSize)
+        .Take(PageSize)
+        .ToList() ?? new List<MovieResponseDto>();
+    
+    // Page number display range
+    private int StartPage => Math.Max(1, CurrentPage - 2);
+    private int EndPage => Math.Min(TotalPages, CurrentPage + 2);
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
             // Call our own API endpoint using DTOs
-            MoviesList = await Http.GetFromJsonAsync<List<MovieResponseDto>>(Nav.ToAbsoluteUri("api/movies"));
-            Console.WriteLine($"Loaded {MoviesList?.Count ?? 0} movies from API");
+            AllMovies = await Http.GetFromJsonAsync<List<MovieResponseDto>>(Nav.ToAbsoluteUri("api/movies"));
+            MoviesList = AllMovies; // Initially show all movies
+            Console.WriteLine($"Loaded {AllMovies?.Count ?? 0} movies from API");
         }
         catch (Exception ex)
         {
@@ -57,9 +153,10 @@
             Console.WriteLine("Loading placeholder data...");
             
             // Load placeholder data when API is not available
-            MoviesList = GetPlaceholderMovies();
+            AllMovies = GetPlaceholderMovies();
+            MoviesList = AllMovies; // Initially show all movies
             isUsingPlaceholderData = true;
-            Console.WriteLine($"Loaded {MoviesList.Count} placeholder movies");
+            Console.WriteLine($"Loaded {AllMovies.Count} placeholder movies");
         }
     }
 
@@ -149,4 +246,55 @@
             )
         };
     }
+
+    private void OnSearchInput(ChangeEventArgs e)
+    {
+        searchTerm = e.Value?.ToString() ?? "";
+        FilterMovies();
+    }
+
+    private void FilterMovies()
+    {
+        if (AllMovies == null) return;
+
+        if (string.IsNullOrWhiteSpace(searchTerm))
+        {
+            MoviesList = AllMovies.ToList();
+        }
+        else
+        {
+            MoviesList = AllMovies.Where(movie => 
+                movie.Title.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                movie.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                movie.Genre.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                movie.Studio.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                movie.ReleaseDate.Year.ToString().Contains(searchTerm)
+            ).ToList();
+        }
+
+        CurrentPage = 1; // Reset to first page when filtering
+        StateHasChanged();
+    }
+
+    private void ClearSearch()
+    {
+        searchTerm = "";
+        CurrentPage = 1;
+        FilterMovies();
+    }
+    
+    // Pagination methods
+    private void GoToPage(int page)
+    {
+        if (page >= 1 && page <= TotalPages)
+        {
+            CurrentPage = page;
+            StateHasChanged();
+        }
+    }
+    
+    private void FirstPage() => GoToPage(1);
+    private void LastPage() => GoToPage(TotalPages);
+    private void NextPage() => GoToPage(CurrentPage + 1);
+    private void PreviousPage() => GoToPage(CurrentPage - 1);
 }
