@@ -1,3 +1,60 @@
+@rendermode InteractiveServer
+@inject IJSRuntime JSRuntime
+
 <div class="footer-container">
-<p> © CSE-325 - MovieHub</p>
+    <p> © CSE-325 - MovieHub</p>
+    
+    <div class="theme-toggle-footer">
+        <button class="theme-toggle-btn" 
+                @onclick="ToggleTheme" 
+                aria-label="@(isDarkMode ? "Switch to light mode" : "Switch to dark mode")"
+                aria-pressed="@isDarkMode.ToString().ToLower()">
+            @if (isDarkMode)
+            {
+                <span class="theme-icon" aria-hidden="true">☀️</span>
+            }
+            else
+            {
+                <span class="theme-icon" aria-hidden="true">🌙</span>
+            }
+        </button>
+    </div>
 </div>
+
+@code
+{
+    private bool isDarkMode = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Load saved theme preference from localStorage
+            var savedTheme = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "theme");
+            isDarkMode = savedTheme == "dark";
+            
+            if (isDarkMode)
+            {
+                await JSRuntime.InvokeVoidAsync("document.body.classList.add", "dark-mode");
+            }
+            
+            StateHasChanged();
+        }
+    }
+
+    private async Task ToggleTheme()
+    {
+        isDarkMode = !isDarkMode;
+        
+        if (isDarkMode)
+        {
+            await JSRuntime.InvokeVoidAsync("document.body.classList.add", "dark-mode");
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", "theme", "dark");
+        }
+        else
+        {
+            await JSRuntime.InvokeVoidAsync("document.body.classList.remove", "dark-mode");
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", "theme", "light");
+        }
+    }
+}

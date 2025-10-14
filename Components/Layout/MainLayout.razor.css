@@ -1,7 +1,13 @@
+.page {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    width: 100%;
+}
 
 .navbar {
     display: flex;
-    background-color: #1C1C1C;
+    background-color: #202020;
     width: 100%;
     align-items: center;
     padding: 10px 0;
@@ -20,8 +26,16 @@
 
 main {
     background-image: radial-gradient(circle, #e0e0e0 0%, #b0b0b0 60%, #808080 100%);
-    margin-top: 60px; /* Account for fixed navbar */
-    padding-bottom: 60px; /* Account for fixed footer */
+    background-attachment: fixed;
+    background-size: cover;
+    background-position: center;
+    margin-top: 60px;
+    /* Account for fixed navbar */
+    padding-bottom: 60px;
+    /* Account for fixed footer */
+    flex: 1;
+    width: 100%;
+    min-height: calc(100vh - 120px);
 }
 
 .footer {
@@ -31,13 +45,9 @@ main {
 
 
 
-@media (max-width: 640.98px) {
+@media (max-width: 640.98px) {}
 
-}
-
-@media (min-width: 641px) {
-
-}
+@media (min-width: 641px) {}
 
 #blazor-error-ui {
     color-scheme: light only;
@@ -53,9 +63,9 @@ main {
     z-index: 1000;
 }
 
-    #blazor-error-ui .dismiss {
-        cursor: pointer;
-        position: absolute;
-        right: 0.75rem;
-        top: 0.5rem;
-    }
+#blazor-error-ui .dismiss {
+    cursor: pointer;
+    position: absolute;
+    right: 0.75rem;
+    top: 0.5rem;
+}
