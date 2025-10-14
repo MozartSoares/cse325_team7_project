@@ -14,9 +14,11 @@
 .modal-content {
     background-color: white;
     border-radius: 15px; /* Rounded borders */
-    padding: 20px;
+    padding: 28px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    width: 400px; /* Set your desired width */
+    width: min(720px, 92vw);
+    max-height: 90vh;
+    overflow-y: auto;
 }
 
 .modal-header {
@@ -40,4 +42,11 @@
     border: none;
     font-size: 24px;
     cursor: pointer;
+}
+
+@media (max-width: 640px) {
+    .modal-content {
+        padding: 22px;
+        width: 94vw;
+    }
 }

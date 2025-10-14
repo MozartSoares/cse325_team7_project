@@ -17,11 +17,9 @@ public class MovieService(IMongoCollection<Movie> movies) : IMovieService
     /// <inheritdoc />
     public async Task<IReadOnlyList<Movie>> List()
     {
-        var cursor = await _movies.FindAsync(FilterDefinition<Movie>.Empty);
+        var cursor = await _movies.Find(FilterDefinition<Movie>.Empty).SortBy(m => m.Title).ToCursorAsync();
         return await cursor.ToListAsync();
     }
-
-    /// <inheritdoc />
     public async Task<Movie> Get(ObjectId id)
     {
         var movie = await _movies.Find(m => m.Id == id).FirstOrDefaultAsync() ?? throw new NotFoundException($"Movie {id} not found");

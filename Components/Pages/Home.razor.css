@@ -125,6 +125,12 @@
     flex: 1;
 }
 
+.cast-entry select.form-control {
+    min-width: 220px;
+    padding: 0.65rem 0.75rem;
+    font-size: 0.95rem;
+}
+
 .remove-cast-btn {
     background-color: #e74c3c;
     color: #ffffff;
