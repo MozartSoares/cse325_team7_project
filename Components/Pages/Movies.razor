@@ -1,0 +1,468 @@
+@page "/movies"
+@rendermode InteractiveServer
+@using cse325_team7_project.Api.DTOs
+@using cse325_team7_project.Domain.Enums
+@inject HttpClient Http
+@inject NavigationManager Nav
+
+
+<h1 class="movie-label">Movies @(isUsingPlaceholderData ? "(Demo Data)" : "")</h1>
+
+<div class="search-container">
+    <label for="movieSearch" class="visually-hidden">Search movies by title</label>
+    <input type="text" id="movieSearch" class="search-bar" value="@searchTerm" @oninput="OnSearchInput" placeholder="Search movies by title..." aria-label="Search movies by title" />
+    @if (!string.IsNullOrWhiteSpace(searchTerm))
+    {
+        <button class="clear-search-btn" @onclick="ClearSearch" aria-label="Clear search">✕</button>
+    }
+</div>
+
+<div class="advanced-filter-container">
+    <div class="filter-inputs">
+        <div class="filter-input-group">
+            <label for="genreFilter">Genre:</label>
+            <select id="genreFilter" @bind="selectedGenre" class="filter-select">
+                <option value="">All Genres</option>
+                @foreach (var genre in Enum.GetValues<Genre>())
+                {
+                    <option value="@genre">@genre.ToString()</option>
+                }
+            </select>
+        </div>
+        <div class="filter-input-group">
+            <label for="minBudget">Min Budget:</label>
+            <input type="number" id="minBudget" @bind="minBudget" class="filter-input" placeholder="0" />
+        </div>
+        <div class="filter-input-group">
+            <label for="maxBudget">Max Budget:</label>
+            <input type="number" id="maxBudget" @bind="maxBudget" class="filter-input" placeholder="Any" />
+        </div>
+        <div class="filter-input-group">
+            <label for="startDate">Start Date:</label>
+            <input type="date" id="startDate" @bind="startDate" class="filter-input" />
+        </div>
+        <div class="filter-input-group">
+            <label for="endDate">End Date:</label>
+            <input type="date" id="endDate" @bind="endDate" class="filter-input" />
+        </div>
+    </div>
+    <button class="btn btn-primary filter-btn" @onclick="ApplyFilters">Apply Filters</button>
+    @if (isFilterActive)
+    {
+        <button class="btn btn-secondary clear-filter-btn" @onclick="ClearFilters">Clear Filters</button>
+    }
+</div>
+
+<div class="search-results-info" role="status" aria-live="polite" aria-atomic="true">
+    @if (!string.IsNullOrWhiteSpace(searchTerm) || isFilterActive)
+    {
+        <p class="search-info">
+            @if (MoviesList?.Count > 0)
+            {
+                <span>Found @MoviesList.Count movie(s)</span>
+                @if (!string.IsNullOrWhiteSpace(searchTerm))
+                {
+                    <span> matching "@searchTerm"</span>
+                }
+                @if (isFilterActive)
+                {
+                    <span> @GetFilterDescription()</span>
+                }
+            }
+            else
+            {
+                <span>No movies found</span>
+                @if (!string.IsNullOrWhiteSpace(searchTerm))
+                {
+                    <span> matching "@searchTerm"</span>
+                }
+                @if (isFilterActive)
+                {
+                    <span> @GetFilterDescription()</span>
+                }
+            }
+        </p>
+    }
+    else if (AllMovies?.Count > 0)
+    {
+        <p class="search-info">Showing all @AllMovies.Count movies</p>
+    }
+</div>
+
+<div class="movie-cards">
+    @if (MoviesList == null)
+    {
+        <p>Loading movies...</p>
+    }
+    else if (MoviesList.Count == 0 && string.IsNullOrWhiteSpace(searchTerm))
+    {
+        <p>No movies found in database.</p>
+    }
+    else if (MoviesList.Count == 0 && !string.IsNullOrWhiteSpace(searchTerm))
+    {
+        <div class="no-results">
+            <p>No movies match your search criteria.</p>
+            <p>Try searching for:</p>
+            <ul>
+                <li>Movie titles (e.g., "Matrix", "Inception")</li>
+                <li>Use filters for genre, budget, and release dates</li>
+            </ul>
+        </div>
+        <button class="btn btn-secondary" @onclick="ClearSearch">Show All Movies</button>
+    }
+    else
+    {
+        @foreach (var movie in PaginatedMovies)
+        {
+            <article class="movie-card">
+                <a class="movie-link" href="/movies/@movie.Id" aria-label="View details for @movie.Title">
+                    <div class="movie-image">
+                        <img src="@movie.ThumbnailImage" alt="@movie.Title poster" class="movie-poster" />
+                    </div>
+                    <div class="movie-info">
+                        <h2 class="movie-title">@movie.Title</h2>
+                        <p class="movie-genre" aria-label="Genre: @movie.Genre.ToString()">@movie.Genre.ToString()</p>
+                        <p class="movie-description">@movie.Description</p>
+                        <p class="movie-budget" aria-label="Budget: @movie.Budget.ToString("C0")">Budget: $@movie.Budget.ToString("N0")</p>
+                        <p class="movie-year" aria-label="Release year: @movie.ReleaseDate.Year">@movie.ReleaseDate.Year</p>
+                    </div>
+                </a>
+            </article>
+        }
+    }
+</div>
+
+@if (MoviesList?.Count > 0 && TotalPages > 1)
+{
+    <div class="pagination-container">
+        <div class="pagination-info">
+            <span>Page @CurrentPage of @TotalPages (@MoviesList.Count total movies)</span>
+        </div>
+        <div class="pagination-controls">
+            <button class="pagination-btn" @onclick="FirstPage" disabled="@(CurrentPage == 1)">
+                ⟪ First
+            </button>
+            <button class="pagination-btn" @onclick="PreviousPage" disabled="@(CurrentPage == 1)">
+                ‹ Previous
+            </button>
+            
+            @for (int i = StartPage; i <= EndPage; i++)
+            {
+                var pageNumber = i;
+                <button class="pagination-btn @(CurrentPage == pageNumber ? "active" : "")" 
+                        @onclick="() => GoToPage(pageNumber)"
+                        aria-label="Go to page @pageNumber"
+                        aria-current="@(CurrentPage == pageNumber ? "page" : null)">
+                    @pageNumber
+                </button>
+            }
+            
+            <button class="pagination-btn" @onclick="NextPage" disabled="@(CurrentPage == TotalPages)">
+                Next ›
+            </button>
+            <button class="pagination-btn" @onclick="LastPage" disabled="@(CurrentPage == TotalPages)">
+                Last ⟫
+            </button>
+        </div>
+    </div>
+}
+
+
+@code
+{
+    List<MovieResponseDto>? MoviesList = new();
+    List<MovieResponseDto>? AllMovies = new();
+    private bool isUsingPlaceholderData = false;
+    private string searchTerm = "";
+    
+    // Advanced filter properties
+    private string selectedGenre = "";
+    private decimal? minBudget = null;
+    private decimal? maxBudget = null;
+    private DateOnly? startDate = null;
+    private DateOnly? endDate = null;
+    private bool isFilterActive = false;
+    
+    // Pagination properties
+    private int CurrentPage = 1;
+    private int PageSize = 8;
+    private int TotalPages => MoviesList != null && MoviesList.Count > 0 
+        ? (int)Math.Ceiling(MoviesList.Count / (double)PageSize) 
+        : 1;
+    
+    private List<MovieResponseDto> PaginatedMovies => MoviesList?
+        .Skip((CurrentPage - 1) * PageSize)
+        .Take(PageSize)
+        .ToList() ?? new List<MovieResponseDto>();
+    
+    // Page number display range
+    private int StartPage => Math.Max(1, CurrentPage - 2);
+    private int EndPage => Math.Min(TotalPages, CurrentPage + 2);
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Call our own API endpoint using DTOs
+            AllMovies = await Http.GetFromJsonAsync<List<MovieResponseDto>>(Nav.ToAbsoluteUri("api/movies"));
+            MoviesList = AllMovies; // Initially show all movies
+            Console.WriteLine($"Loaded {AllMovies?.Count ?? 0} movies from API");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading movies from API: {ex.Message}");
+            Console.WriteLine("Loading placeholder data...");
+            
+            // Load placeholder data when API is not available
+            AllMovies = GetPlaceholderMovies();
+            MoviesList = AllMovies; // Initially show all movies
+            isUsingPlaceholderData = true;
+            Console.WriteLine($"Loaded {AllMovies.Count} placeholder movies");
+        }
+    }
+
+    private List<MovieResponseDto> GetPlaceholderMovies()
+    {
+        return new List<MovieResponseDto>
+        {
+            new MovieResponseDto(
+                "1", "The Matrix", new DateOnly(1999, 3, 31), Genre.ScienceFiction,
+                "A computer programmer discovers reality is a simulation and joins a rebellion against machines.",
+                "Warner Bros", new List<cse325_team7_project.Domain.ValueObjects.CastMember>(),
+                "https://via.placeholder.com/400x600/0066cc/ffffff?text=The+Matrix",
+                "https://via.placeholder.com/200x300/0066cc/ffffff?text=Matrix",
+                63000000m, DateTime.UtcNow.AddDays(-30), DateTime.UtcNow.AddDays(-30)
+            ),
+            new MovieResponseDto(
+                "2", "Inception", new DateOnly(2010, 7, 16), Genre.ScienceFiction,
+                "A thief who steals corporate secrets through dream-sharing technology is given the inverse task of planting an idea.",
+                "Warner Bros", new List<cse325_team7_project.Domain.ValueObjects.CastMember>(),
+                "https://via.placeholder.com/400x600/cc6600/ffffff?text=Inception",
+                "https://via.placeholder.com/200x300/cc6600/ffffff?text=Inception",
+                160000000m, DateTime.UtcNow.AddDays(-25), DateTime.UtcNow.AddDays(-25)
+            ),
+            new MovieResponseDto(
+                "3", "The Dark Knight", new DateOnly(2008, 7, 18), Genre.Action,
+                "Batman faces the Joker, a criminal mastermind who wants to plunge Gotham City into anarchy.",
+                "Warner Bros", new List<cse325_team7_project.Domain.ValueObjects.CastMember>(),
+                "https://via.placeholder.com/400x600/333333/ffffff?text=Dark+Knight",
+                "https://via.placeholder.com/200x300/333333/ffffff?text=Batman",
+                185000000m, DateTime.UtcNow.AddDays(-20), DateTime.UtcNow.AddDays(-20)
+            ),
+            new MovieResponseDto(
+                "4", "Pulp Fiction", new DateOnly(1994, 10, 14), Genre.Crime,
+                "The lives of two mob hitmen, a boxer, and others intertwine in four tales of violence and redemption.",
+                "Miramax", new List<cse325_team7_project.Domain.ValueObjects.CastMember>(),
+                "https://via.placeholder.com/400x600/990000/ffffff?text=Pulp+Fiction",
+                "https://via.placeholder.com/200x300/990000/ffffff?text=Pulp",
+                8500000m, DateTime.UtcNow.AddDays(-15), DateTime.UtcNow.AddDays(-15)
+            ),
+            new MovieResponseDto(
+                "5", "The Shawshank Redemption", new DateOnly(1994, 9, 23), Genre.Drama,
+                "Two imprisoned men bond over years, finding solace and eventual redemption through acts of common decency.",
+                "Columbia Pictures", new List<cse325_team7_project.Domain.ValueObjects.CastMember>(),
+                "https://via.placeholder.com/400x600/006600/ffffff?text=Shawshank",
+                "https://via.placeholder.com/200x300/006600/ffffff?text=Shawshank",
+                25000000m, DateTime.UtcNow.AddDays(-10), DateTime.UtcNow.AddDays(-10)
+            ),
+            new MovieResponseDto(
+                "6", "Forrest Gump", new DateOnly(1994, 7, 6), Genre.Drama,
+                "The presidencies of Kennedy and Johnson through the eyes of an Alabama man with an IQ of 75.",
+                "Paramount Pictures", new List<cse325_team7_project.Domain.ValueObjects.CastMember>(),
+                "https://via.placeholder.com/400x600/0099cc/ffffff?text=Forrest+Gump",
+                "https://via.placeholder.com/200x300/0099cc/ffffff?text=Forrest",
+                55000000m, DateTime.UtcNow.AddDays(-5), DateTime.UtcNow.AddDays(-5)
+            ),
+            new MovieResponseDto(
+                "7", "Avatar", new DateOnly(2009, 12, 18), Genre.ScienceFiction,
+                "A paraplegic Marine dispatched to the moon Pandora on a unique mission becomes torn between following orders and protecting an alien civilization.",
+                "20th Century Fox", new List<cse325_team7_project.Domain.ValueObjects.CastMember>(),
+                "https://via.placeholder.com/400x600/0066ff/ffffff?text=Avatar",
+                "https://via.placeholder.com/200x300/0066ff/ffffff?text=Avatar",
+                237000000m, DateTime.UtcNow.AddDays(-3), DateTime.UtcNow.AddDays(-3)
+            ),
+            new MovieResponseDto(
+                "8", "Titanic", new DateOnly(1997, 12, 19), Genre.Romance,
+                "A seventeen-year-old aristocrat falls in love with a kind but poor artist aboard the luxurious, ill-fated R.M.S. Titanic.",
+                "Paramount Pictures", new List<cse325_team7_project.Domain.ValueObjects.CastMember>(),
+                "https://via.placeholder.com/400x600/003366/ffffff?text=Titanic",
+                "https://via.placeholder.com/200x300/003366/ffffff?text=Titanic",
+                200000000m, DateTime.UtcNow.AddDays(-2), DateTime.UtcNow.AddDays(-2)
+            ),
+            new MovieResponseDto(
+                "9", "The Lion King", new DateOnly(1994, 6, 24), Genre.Animation,
+                "A young lion prince flees his kingdom only to learn the true meaning of responsibility and bravery.",
+                "Walt Disney Pictures", new List<cse325_team7_project.Domain.ValueObjects.CastMember>(),
+                "https://via.placeholder.com/400x600/ff9900/ffffff?text=Lion+King",
+                "https://via.placeholder.com/200x300/ff9900/ffffff?text=Lion",
+                45000000m, DateTime.UtcNow.AddDays(-1), DateTime.UtcNow.AddDays(-1)
+            ),
+            new MovieResponseDto(
+                "10", "Jurassic Park", new DateOnly(1993, 6, 11), Genre.Adventure,
+                "A pragmatic paleontologist visiting an almost complete theme park is tasked with protecting a couple of kids after a power failure causes the park's cloned dinosaurs to run loose.",
+                "Universal Pictures", new List<cse325_team7_project.Domain.ValueObjects.CastMember>(),
+                "https://via.placeholder.com/400x600/669900/ffffff?text=Jurassic+Park",
+                "https://via.placeholder.com/200x300/669900/ffffff?text=Jurassic",
+                63000000m, DateTime.UtcNow, DateTime.UtcNow
+            )
+        };
+    }
+
+    private void OnSearchInput(ChangeEventArgs e)
+    {
+        searchTerm = e.Value?.ToString() ?? "";
+        FilterMovies();
+    }
+
+    private void FilterMovies()
+    {
+        if (AllMovies == null) return;
+
+        // Start with all movies
+        var filteredMovies = AllMovies.AsEnumerable();
+
+        // Apply text search filter (title only)
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            filteredMovies = filteredMovies.Where(movie => 
+                movie.Title.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+            );
+        }
+
+        // Apply advanced filters
+        if (isFilterActive)
+        {
+            // Genre filter
+            if (!string.IsNullOrWhiteSpace(selectedGenre))
+            {
+                filteredMovies = filteredMovies.Where(movie => 
+                    movie.Genre.ToString() == selectedGenre
+                );
+            }
+
+            // Budget filters
+            if (minBudget.HasValue)
+            {
+                filteredMovies = filteredMovies.Where(movie => 
+                    movie.Budget >= minBudget.Value
+                );
+            }
+
+            if (maxBudget.HasValue)
+            {
+                filteredMovies = filteredMovies.Where(movie => 
+                    movie.Budget <= maxBudget.Value
+                );
+            }
+
+            // Date range filter
+            if (startDate.HasValue && endDate.HasValue)
+            {
+                filteredMovies = filteredMovies.Where(movie => 
+                    movie.ReleaseDate >= startDate.Value && 
+                    movie.ReleaseDate <= endDate.Value
+                );
+            }
+            else if (startDate.HasValue)
+            {
+                filteredMovies = filteredMovies.Where(movie => 
+                    movie.ReleaseDate >= startDate.Value
+                );
+            }
+            else if (endDate.HasValue)
+            {
+                filteredMovies = filteredMovies.Where(movie => 
+                    movie.ReleaseDate <= endDate.Value
+                );
+            }
+        }
+
+        MoviesList = filteredMovies.ToList();
+        CurrentPage = 1; // Reset to first page when filtering
+        StateHasChanged();
+    }
+
+    private void ClearSearch()
+    {
+        searchTerm = "";
+        CurrentPage = 1;
+        FilterMovies();
+    }
+
+    private void ApplyFilters()
+    {
+        // Set filter as active if any filter is specified
+        isFilterActive = !string.IsNullOrWhiteSpace(selectedGenre) || 
+                        minBudget.HasValue || 
+                        maxBudget.HasValue || 
+                        startDate.HasValue || 
+                        endDate.HasValue;
+        FilterMovies();
+    }
+
+    private void ClearFilters()
+    {
+        selectedGenre = "";
+        minBudget = null;
+        maxBudget = null;
+        startDate = null;
+        endDate = null;
+        isFilterActive = false;
+        FilterMovies();
+    }
+
+    private string GetFilterDescription()
+    {
+        if (!isFilterActive) return "";
+        
+        var descriptions = new List<string>();
+        
+        if (!string.IsNullOrWhiteSpace(selectedGenre))
+        {
+            descriptions.Add($"genre: {selectedGenre}");
+        }
+        
+        if (minBudget.HasValue && maxBudget.HasValue)
+        {
+            descriptions.Add($"budget: ${minBudget.Value:N0} - ${maxBudget.Value:N0}");
+        }
+        else if (minBudget.HasValue)
+        {
+            descriptions.Add($"budget: ${minBudget.Value:N0}+");
+        }
+        else if (maxBudget.HasValue)
+        {
+            descriptions.Add($"budget: up to ${maxBudget.Value:N0}");
+        }
+        
+        if (startDate.HasValue && endDate.HasValue)
+        {
+            descriptions.Add($"released: {startDate.Value:MMM d, yyyy} - {endDate.Value:MMM d, yyyy}");
+        }
+        else if (startDate.HasValue)
+        {
+            descriptions.Add($"released: from {startDate.Value:MMM d, yyyy}");
+        }
+        else if (endDate.HasValue)
+        {
+            descriptions.Add($"released: up to {endDate.Value:MMM d, yyyy}");
+        }
+        
+        return descriptions.Count > 0 ? $"with {string.Join(", ", descriptions)}" : "";
+    }
+    
+    // Pagination methods
+    private void GoToPage(int page)
+    {
+        if (page >= 1 && page <= TotalPages)
+        {
+            CurrentPage = page;
+            StateHasChanged();
+        }
+    }
+    
+    private void FirstPage() => GoToPage(1);
+    private void LastPage() => GoToPage(TotalPages);
+    private void NextPage() => GoToPage(CurrentPage + 1);
+    private void PreviousPage() => GoToPage(CurrentPage - 1);
+}

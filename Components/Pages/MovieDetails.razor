@@ -1,0 +1,632 @@
+@page "/movies/{Id}"
+@rendermode InteractiveServer
+@using cse325_team7_project.Api.DTOs;
+@using cse325_team7_project.Components.Services;
+@using cse325_team7_project.Domain.Enums;
+@using cse325_team7_project.Domain.ValueObjects;
+@using cse325_team7_project.Components.Shared;
+@implements IDisposable
+@inject HttpClient Http
+@inject NavigationManager Nav
+@inject AuthStateService AuthState
+
+<div class="movie-details-container">
+    @if (!loadAttempted)
+    {
+        <p>Loading movie...</p>
+    }
+    else if (Movie == null)
+    {
+        <p>Movie not found.</p>
+    }
+    else
+    {
+        <div class="movie-details-card movie-details">
+            <div class="movie-details-image">
+                <img src="@Movie.Image" alt="@Movie.Title" />
+            </div>
+
+            <div class="movie-details-info">
+                <div class="movie-details-header">
+                    <h2 class="mb-1">@Movie.Title</h2>
+                    @if (isUsingPlaceholderData)
+                    {
+                        <span class="muted">(Demo Data)</span>
+                    }
+                </div>
+
+                @* <p class="movie-details-meta">Id: <code>@Movie.Id</code></p> *@
+                <p class="movie-details-meta">Release: @Movie.ReleaseDate.ToString("MMMM d, yyyy")</p>
+                <p class="movie-details-meta">Genre: @Movie.Genre.ToString()</p>
+                <p class="movie-details-meta">Studio: @Movie.Studio</p>
+                <p class="movie-details-budget">Budget: $@Movie.Budget.ToString("N0")</p>
+
+                <div class="movie-details-description">@Movie.Description</div>
+
+                @if (Movie.Cast != null && Movie.Cast.Count > 0)
+                {
+                    <h4 class="mt-3">Cast</h4>
+                    <ul class="movie-cast-list">
+                        @foreach (var c in Movie.Cast)
+                        {
+                            <li>@c.Name (@c.Role.ToString())</li>
+                        }
+                    </ul>
+                }
+
+                <div class="mt-3">
+                    <a class="btn btn-secondary" href="/" role="button">Back</a>
+                </div>
+                <div class="detail-action-buttons">
+                    @if (CanAddToList)
+                    {
+                        <button class="detail-blue-button" @onclick="ShowAddModal">Add to list</button>
+                    }
+                    @if (CanManageMovie)
+                    {
+                        <button class="detail-blue-button" @onclick="ShowEditModal">Edit</button>
+                        <button class="detail-red-button" @onclick="ShowDeleteModal">Delete</button>
+                    }
+                </div>
+            </div>
+        </div>
+
+        @if (CanAddToList)
+        {
+            <Modal Title="Add or Remove from List" Show="@addListModalVisible" OnDecline="CloseAddModal">
+                @if (movieLists is null)
+                {
+                    <p>Loading lists...</p>
+                }
+                else if (movieLists.Any())
+                {
+                    <EditForm Model="@this" OnValidSubmit="HandleAddToListSubmit">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        <div class="form-group">
+                            <label for="movieListSelector">Select a List</label>
+                            <select id="movieListSelector" @bind="@selectedListId" class="form-control" required>
+                                <option value="">-- Select a List --</option>
+                                @foreach (var movieList in movieLists)
+                                {
+                                    <option value="@movieList.Id">@movieList.Title</option>
+                                }
+                            </select>
+                            <ValidationMessage For="@(() => selectedListId)" />
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">Add</button>
+                            <button type="button" class="btn btn-danger" disabled="@(!SelectedListHasMovie)" @onclick="HandleRemoveFromListSubmit">Remove</button>
+                        </div>
+                    </EditForm>
+                }
+                else
+                {
+                    <p>You don't have any lists yet.</p>
+                }
+            </Modal>
+        }
+
+        @if (CanManageMovie)
+        {
+            <Modal Title="Edit Details" Show="@editModalVisible" OnDecline="CloseEditModal">
+                @if (movieUpdateDto != null)
+                {
+                <EditForm EditContext="@editContext" OnValidSubmit="HandleMovieEditSubmit">
+                    <DataAnnotationsValidator />
+
+                    <div class="form-group">
+                        <label>Title</label>
+                        <InputText @bind-Value="movieUpdateDto.Title" class="form-control" />
+                        <ValidationMessage For="@(() => movieUpdateDto.Title)" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Release Date</label>
+                        <InputDate @bind-Value="movieUpdateDto.ReleaseDate" class="form-control" />
+                        <ValidationMessage For="@(() => movieUpdateDto.ReleaseDate)" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Genre</label>
+                        <select @bind="movieUpdateDto.Genre" class="form-control">
+                            @foreach (var genre in Enum.GetValues(typeof(Genre)).Cast<Genre>())
+                            {
+                                <option value="@genre">@genre</option>
+                            }
+                        </select>
+                        <ValidationMessage For="@(() => movieUpdateDto.Genre)" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Description</label>
+                        <InputTextArea @bind-Value="movieUpdateDto.Description" class="form-control" />
+                        <ValidationMessage For="@(() => movieUpdateDto.Description)" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Studio</label>
+                        <InputText @bind-Value="movieUpdateDto.Studio" class="form-control" />
+                        <ValidationMessage For="@(() => movieUpdateDto.Studio)" />
+                    </div>
+                    
+                    @* It almost works, but throws Index errors I couldn't fix *@
+
+                    @* <div class="form-group">
+                        <label>Cast Members</label>
+        
+                        @if (movieUpdateDto.Cast != null && movieUpdateDto.Cast.Count > 0)
+                        {
+
+                            for (int i = 0; i < movieUpdateDto.Cast.Count; i++)
+                            {
+                                <div class="d-flex align-items-center mb-2">
+                                    <InputText @bind-Value="movieUpdateDto.Cast[i].Name" class="form-control me-2" placeholder="Cast Member Name" />
+                                    
+                                    <select @bind="movieUpdateDto.Cast[i].Role" class="form-control">
+                                        @foreach (var role in Enum.GetValues(typeof(CastRole)).Cast<CastRole>())
+                                        {
+                                            <option value="@role">@role</option>
+                                        }
+                                    }
+                                    </select>
+
+                                    <button type="button" class="btn btn-danger ms-2" @onclick="() => RemoveCastMember(i)">X</button>
+                                </div>
+                                <ValidationMessage For="@(() => movieUpdateDto.Cast[i])" />
+                            }
+                        }
+                    
+                        <button type="button" class="btn btn-secondary" @onclick="AddCastMember">Add Cast Member</button>
+                    </div> *@
+
+                    <div class="form-group">
+                        <label>Image URL</label>
+                        <InputText @bind-Value="movieUpdateDto.Image" class="form-control" />
+                        <ValidationMessage For="@(() => movieUpdateDto.Image)" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Thumbnail Image URL</label>
+                        <InputText @bind-Value="movieUpdateDto.ThumbnailImage" class="form-control" />
+                        <ValidationMessage For="@(() => movieUpdateDto.ThumbnailImage)" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Budget</label>
+                        <InputNumber @bind-Value="movieUpdateDto.Budget" class="form-control" />
+                        <ValidationMessage For="@(() => movieUpdateDto.Budget)" />
+                    </div>
+                    <button type="submit" class="btn btn-primary" disabled="@isChanged">Save</button>
+                </EditForm>
+                }
+            </Modal>
+
+            <Modal Title="Delete" AcceptText="Confirm" Show="@deleteModalVisible" OnDecline="CloseDeleteModal"
+                OnAccept="HandleDeleteSubmit">
+                <p>Do you want to delete movie "@Movie.Title"?</p>
+            </Modal>
+        }
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string Id { get; set; } = string.Empty;
+
+    private MovieResponseDto? Movie;
+    private bool isUsingPlaceholderData = false;
+    private bool loadAttempted = false;
+
+    private MovieUpdateDto? movieUpdateDto;
+
+    private EditContext? editContext;
+    private bool isChanged = true;
+    private List<MoviesListResponseDto>? movieLists = new();
+    private string selectedListId = string.Empty;
+
+    private bool IsAdmin => AuthState.CurrentUser?.Role == UserRole.Admin;
+    private bool CanManageMovie => IsAdmin;
+    private bool CanAddToList => AuthState.IsAuthenticated;
+
+    protected override void OnInitialized()
+    {
+        AuthState.AuthStateChanged += HandleAuthStateChanged;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await AuthState.EnsureInitializedAsync();
+
+        try
+        {
+            Movie = await Http.GetFromJsonAsync<MovieResponseDto>(Nav.ToAbsoluteUri($"api/movies/{Id}"));
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading movie {Id}: {ex.Message}");
+        }
+
+        // If API didn't return a movie (or API not available), try placeholder/demo data
+        if (Movie == null)
+        {
+            var placeholders = GetPlaceholderMovies();
+            Movie = placeholders.FirstOrDefault(m => m.Id == Id);
+            if (Movie != null)
+            {
+                isUsingPlaceholderData = true;
+                
+            }
+        }
+        if (Movie != null ) {
+            movieUpdateDto = new MovieUpdateDto {
+                Title = Movie.Title,
+                ReleaseDate = Movie.ReleaseDate,
+                Genre = Movie.Genre,
+                Description = Movie.Description,
+                Studio = Movie.Studio,
+                Cast = Movie.Cast.Select(c => new CastMemberDto{ Name = c.Name, Role = c.Role }).ToList(),
+                Image = Movie.Image,
+                ThumbnailImage = Movie.ThumbnailImage,
+                Budget = Movie.Budget
+            };
+            editContext = new EditContext(movieUpdateDto);
+            editContext.OnFieldChanged += (sender, eventArgs) => isChanged = false;
+        }
+
+        loadAttempted = true;
+    }
+
+    private void GoBack()
+    {
+        Nav.NavigateTo("/movies");
+    }
+
+    private List<MovieResponseDto> GetPlaceholderMovies() => MockData.GetPlaceholderMovies2(); 
+
+    private List<MoviesListResponseDto> GetPlaceholderLists() => MockData.GetPlaceholderLists();
+
+    @* Add movie to List Form *@
+    private bool addListModalVisible = false;
+    private async Task ShowAddModal()
+    {
+        if (!CanAddToList)
+        {
+            return;
+        }
+
+        await AuthState.EnsureInitializedAsync();
+
+        addListModalVisible = true;
+        try
+        {
+            movieLists = await Http.GetFromJsonAsync<List<MoviesListResponseDto>>(Nav.ToAbsoluteUri("api/lists"));
+            // Fetch the latest lists owned by the current user (fresh from API)
+            var allowed = await LoadCurrentUserListIdsAsync();
+            if (allowed is not null)
+            {
+                movieLists = movieLists?.Where(l => allowed.Contains(l.Id)).ToList();
+                // Preselect a list that already contains the movie if possible
+                if (!string.IsNullOrEmpty(Movie?.Id))
+                {
+                    var current = movieLists?.FirstOrDefault(l => l.Movies?.Contains(Movie.Id) == true);
+                    if (current is not null)
+                    {
+                        selectedListId = current.Id;
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading movie lists: {ex.Message}");
+            movieLists = GetPlaceholderLists();
+        }
+
+        if (movieLists is null || movieLists.Count == 0)
+        {
+            selectedListId = string.Empty;
+        }
+    }
+    
+    private void CloseAddModal()
+    {
+        addListModalVisible = false;
+        selectedListId = string.Empty;
+    }
+
+    private async Task HandleAddToListSubmit()
+    {
+        if (!CanAddToList)
+        {
+            CloseAddModal();
+            return;
+        }
+
+        // Double-check ownership against the freshest server data
+        var allowed = await LoadCurrentUserListIdsAsync();
+        if (allowed is null || string.IsNullOrEmpty(selectedListId) || !allowed.Contains(selectedListId))
+        {
+            Console.WriteLine("Cannot modify a list you do not own.");
+            CloseAddModal();
+            return;
+        }
+
+        if (Movie == null || string.IsNullOrEmpty(selectedListId))
+        {
+            Console.WriteLine("No movie or list selected.");
+            CloseAddModal();
+            return;
+        }
+
+        try
+        {
+            // Find the selected list
+            var selectedList = movieLists?.FirstOrDefault(list => list.Id == selectedListId);
+            if (selectedList == null)
+            {
+                Console.WriteLine("Selected list not found.");
+                CloseAddModal();
+                return;
+            }
+
+            // Create an update DTO
+            var updateDto = new MoviesListUpdateDto
+            {
+                Title = selectedList.Title,
+                Movies = selectedList.Movies ?? new List<string>()
+            };
+
+            // Add the movie ID if it's not already in the list
+            if (!updateDto.Movies.Contains(Movie.Id))
+            {
+                updateDto.Movies.Add(Movie.Id);
+            }
+
+            // Send the update to the API
+            if (!await AuthState.ApplyAuthorizationAsync(Http))
+            {
+                Console.WriteLine("Not authenticated; cannot update list.");
+                CloseAddModal();
+                return;
+            }
+
+            var response = await Http.PutAsJsonAsync(Nav.ToAbsoluteUri($"api/lists/{selectedListId}"), updateDto);
+
+            if (response.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"Added {Movie.Title} to list {selectedList.Title}");
+            }
+            else
+            {
+                Console.WriteLine($"Error: {await response.Content.ReadAsStringAsync()}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
+            CloseAddModal();
+        }
+    }
+
+    private bool SelectedListHasMovie
+        => !string.IsNullOrEmpty(selectedListId)
+            && movieLists?.FirstOrDefault(l => l.Id == selectedListId)?.Movies?.Contains(Movie?.Id ?? string.Empty) == true;
+
+    private async Task HandleRemoveFromListSubmit()
+    {
+        if (!CanAddToList)
+        {
+            CloseAddModal();
+            return;
+        }
+
+        var allowed = await LoadCurrentUserListIdsAsync();
+        if (allowed is null || string.IsNullOrEmpty(selectedListId) || !allowed.Contains(selectedListId))
+        {
+            Console.WriteLine("Cannot modify a list you do not own.");
+            CloseAddModal();
+            return;
+        }
+
+        if (Movie == null || string.IsNullOrEmpty(selectedListId))
+        {
+            Console.WriteLine("No movie or list selected.");
+            CloseAddModal();
+            return;
+        }
+
+        try
+        {
+            var selectedList = movieLists?.FirstOrDefault(list => list.Id == selectedListId);
+            if (selectedList == null)
+            {
+                Console.WriteLine("Selected list not found.");
+                CloseAddModal();
+                return;
+            }
+
+            var updateDto = new MoviesListUpdateDto
+            {
+                Title = selectedList.Title,
+                Movies = (selectedList.Movies ?? new List<string>()).Where(m => m != Movie.Id).ToList()
+            };
+
+            if (!await AuthState.ApplyAuthorizationAsync(Http))
+            {
+                Console.WriteLine("Not authenticated; cannot update list.");
+                CloseAddModal();
+                return;
+            }
+
+            var response = await Http.PutAsJsonAsync(Nav.ToAbsoluteUri($"api/lists/{selectedListId}"), updateDto);
+
+            if (response.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"Removed {Movie.Title} from list {selectedList.Title}");
+            }
+            else
+            {
+                Console.WriteLine($"Error: {await response.Content.ReadAsStringAsync()}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
+            CloseAddModal();
+        }
+    }
+
+    
+    @* Movie Edit Form *@
+    private bool editModalVisible = false;
+    private void ShowEditModal()
+    {
+        if (!CanManageMovie)
+        {
+            return;
+        }
+
+        editModalVisible = true;
+    }
+    private void CloseEditModal() => editModalVisible = false;
+
+    private async Task HandleMovieEditSubmit()
+    {
+        if (!CanManageMovie)
+        {
+            CloseEditModal();
+            return;
+        }
+
+        try
+        {
+            Console.WriteLine($"Updating movie {Movie?.Title}");
+            if (!await AuthState.ApplyAuthorizationAsync(Http))
+            {
+                Console.WriteLine("Not authenticated; cannot update movie.");
+                CloseEditModal();
+                return;
+            }
+            var response = await Http.PutAsJsonAsync(Nav.ToAbsoluteUri($"api/movies/{Id}"), movieUpdateDto);
+
+            if (response.IsSuccessStatusCode)
+            {
+                Movie = await response.Content.ReadFromJsonAsync<MovieResponseDto>();
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Error updating movie: {error}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
+            CloseEditModal();
+        }
+    }
+
+
+    @* Movie Delete Confirm *@
+    private bool deleteModalVisible = false;
+    private void ShowDeleteModal()
+    {
+        if (!CanManageMovie)
+        {
+            return;
+        }
+
+        deleteModalVisible = true;
+    }
+    private void CloseDeleteModal() => deleteModalVisible = false;
+
+    private async Task HandleDeleteSubmit()
+    {
+        if (!CanManageMovie)
+        {
+            CloseDeleteModal();
+            return;
+        }
+
+        try
+        {
+            Console.WriteLine($"Deleting movie {Movie?.Title}");
+            if (!await AuthState.ApplyAuthorizationAsync(Http))
+            {
+                Console.WriteLine("Not authenticated; cannot delete movie.");
+                CloseDeleteModal();
+                return;
+            }
+            var response = await Http.DeleteAsync(Nav.ToAbsoluteUri($"api/movies/{Id}"));
+
+            if (response.IsSuccessStatusCode)
+            {
+                Nav.NavigateTo("/");
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Error deleting movie: {error}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
+            CloseDeleteModal();
+        }
+    }
+
+    private void AddCastMember()
+    {
+        movieUpdateDto?.Cast.Add(new CastMemberDto { Name = string.Empty, Role = CastRole.Actor});
+    }
+
+    private void RemoveCastMember(int index)
+    {
+        movieUpdateDto?.Cast.RemoveAt(index);
+    }
+
+    private async Task<HashSet<string>?> LoadCurrentUserListIdsAsync()
+    {
+        var userId = AuthState.CurrentUser?.Id;
+        if (string.IsNullOrWhiteSpace(userId)) return null;
+
+        try
+        {
+            // This endpoint is public for GET by id
+            var fresh = await Http.GetFromJsonAsync<UserResponseDto>(Nav.ToAbsoluteUri($"api/users/{userId}"));
+            if (fresh?.Lists is null) return new HashSet<string>(StringComparer.Ordinal);
+            return new HashSet<string>(fresh.Lists, StringComparer.Ordinal);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to load current user lists: {ex.Message}");
+            return null;
+        }
+    }
+
+    private void HandleAuthStateChanged()
+    {
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        AuthState.AuthStateChanged -= HandleAuthStateChanged;
+    }
+}

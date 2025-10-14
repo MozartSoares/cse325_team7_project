@@ -1,0 +1,65 @@
+.movie-list-container {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.movie-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background-color: #f5f5f5;
+    border-bottom: 1px solid #ddd;
+}
+
+.movie-list-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.movie-inline-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.list-action-buttons {
+    display: flex;
+    justify-content: right;
+    column-gap: 0.5rem;
+}
+
+.list-blue-button,
+.list-red-button {
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+.list-blue-button {
+  background-color: #3498db;
+}
+
+.list-blue-button:hover {
+  background-color: #2980b9;
+}
+
+.list-red-button {
+  background-color: #e74c3c;
+}
+
+.list-red-button:hover {
+  background-color: #c0392b;
+}
+
+.movie-list {
+    display: flex;
+    overflow-x: auto;             
+    padding: 10px 0;
+    gap: 10px;                    
+}

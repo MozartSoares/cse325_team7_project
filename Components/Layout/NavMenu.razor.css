@@ -1,0 +1,195 @@
+/* Navbar container - make it flexbox */
+:host {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: 15px;
+    padding: 10px 15px;
+}
+
+.logo-container {
+    display: flex;
+    height: 5vh;
+    flex-shrink: 0;
+    /* Don't shrink the logo */
+}
+
+.logo {
+    display: block;
+    padding: 0;
+    margin: 0;
+}
+
+/* Search form - take up remaining space */
+form {
+    flex: 1;
+    /* Take up all available space */
+    display: flex;
+}
+
+.search-bar {
+    border-radius: 25px !important;
+    width: 100%;
+    padding: 8px 15px;
+    border: 1px solid #ddd;
+    outline: none;
+    font-size: 14px;
+}
+
+.search-bar:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Navigation items - don't shrink */
+nav {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.nav-item {
+    color: #eeee;
+    text-decoration: none !important;
+}
+
+.navLink {
+    text-decoration: none !important;
+}
+
+.nav-item a {
+    text-decoration: none !important;
+}
+
+a.navLink {
+    text-decoration: none !important;
+}
+
+@media (min-width: 641px) {}
+
+.nav-button {
+    border-radius: 20px;
+    padding: 6px 16px;
+    font-size: 0.9rem;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.nav-button:hover {
+    transform: translateY(-1px);
+}
+
+.nav-button-secondary {
+    background-color: transparent;
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.6);
+}
+
+.nav-button-secondary:hover {
+    border-color: #ffffff;
+    color: #ffffff;
+}
+
+.nav-button-primary {
+    background-color: #ff5252;
+    color: #ffffff;
+    border-color: #ff5252;
+}
+
+.nav-button-primary:hover {
+    background-color: #ff2e2e;
+    border-color: #ff2e2e;
+}
+
+.avatar-circle {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ff784f, #ff5252);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 1rem;
+    text-transform: uppercase;
+}
+
+.user-name {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.user-menu {
+    position: relative;
+    display: flex;
+    align-items: center;
+    outline: none;
+}
+
+.user-menu-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 12px 4px 6px;
+    border-radius: 9999px;
+    background-color: transparent;
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.user-menu-button:hover,
+.user-menu-button:focus-visible {
+    background-color: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.user-menu-button .chevron {
+    font-size: 0.75rem;
+    margin-left: 4px;
+}
+
+.user-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    min-width: 160px;
+    background: rgba(18, 18, 18, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+    display: flex;
+    flex-direction: column;
+    padding: 6px 0;
+    z-index: 1000;
+}
+
+.user-dropdown-item {
+    background: none;
+    border: none;
+    color: #ffffff;
+    text-align: left;
+    padding: 10px 14px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.user-dropdown-item:hover,
+.user-dropdown-item:focus-visible {
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+.user-dropdown-item.logout {
+    color: #ff6b6b;
+}
+
+.user-dropdown-item.logout:hover,
+.user-dropdown-item.logout:focus-visible {
+    background-color: rgba(255, 107, 107, 0.12);
+    color: #ff8383;
+}

@@ -1,0 +1,213 @@
+/* Hero Section Styles */
+.hero-section {
+    width: 100%;
+    background: linear-gradient(135deg, #e71621 0%, #b01118 100%);
+    padding: 60px 20px;
+    margin-bottom: 40px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.hero-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    align-items: center;
+}
+
+.hero-left {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    padding-right: 20px;
+}
+
+.hero-title {
+    font-size: 3rem;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1.2;
+    margin: 0;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    letter-spacing: -0.5px;
+}
+
+.hero-signup-btn {
+    padding: 16px 40px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #e71621;
+    background: #ffffff;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    align-self: flex-start;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.hero-signup-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    background: #f8f9fa;
+}
+
+.hero-signup-btn:active {
+    transform: translateY(-1px);
+}
+
+.hero-right {
+    padding-left: 20px;
+    border-left: 3px solid rgba(255, 255, 255, 0.3);
+}
+
+.hero-description {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: #ffffff;
+    margin: 0;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.hero-tagline {
+    display: block;
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 15px;
+    color: #ffd700;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Tablet Styles */
+@media (max-width: 1024px) {
+    .hero-section {
+        padding: 50px 20px;
+    }
+
+    .hero-content {
+        gap: 30px;
+    }
+
+    .hero-title {
+        font-size: 2.5rem;
+    }
+
+    .hero-description {
+        font-size: 1rem;
+    }
+
+    .hero-tagline {
+        font-size: 1.2rem;
+    }
+
+    .hero-signup-btn {
+        padding: 14px 35px;
+        font-size: 1rem;
+    }
+}
+
+/* Mobile Styles */
+@media (max-width: 768px) {
+    .hero-section {
+        padding: 40px 15px;
+        margin-bottom: 30px;
+    }
+
+    .hero-content {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+
+    .hero-left {
+        padding-right: 0;
+        text-align: center;
+        align-items: center;
+    }
+
+    .hero-right {
+        padding-left: 0;
+        border-left: none;
+        border-top: 3px solid rgba(255, 255, 255, 0.3);
+        padding-top: 30px;
+        text-align: center;
+    }
+
+    .hero-title {
+        font-size: 2rem;
+    }
+
+    .hero-signup-btn {
+        width: 100%;
+        max-width: 300px;
+    }
+
+    .hero-description {
+        font-size: 0.95rem;
+        line-height: 1.6;
+    }
+
+    .hero-tagline {
+        font-size: 1.1rem;
+        margin-bottom: 12px;
+    }
+}
+
+/* Small Mobile Styles */
+@media (max-width: 480px) {
+    .hero-section {
+        padding: 30px 10px;
+        margin-bottom: 20px;
+    }
+
+    .hero-content {
+        gap: 25px;
+    }
+
+    .hero-title {
+        font-size: 1.6rem;
+        letter-spacing: -0.3px;
+    }
+
+    .hero-signup-btn {
+        padding: 12px 30px;
+        font-size: 0.95rem;
+    }
+
+    .hero-description {
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+
+    .hero-tagline {
+        font-size: 1rem;
+        margin-bottom: 10px;
+    }
+
+    .hero-right {
+        padding-top: 25px;
+    }
+}
+
+/* Animation for hero section on load */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.hero-left,
+.hero-right {
+    animation: fadeInUp 0.8s ease-out;
+}
+
+.hero-right {
+    animation-delay: 0.2s;
+}

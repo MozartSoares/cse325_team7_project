@@ -1,0 +1,283 @@
+### REST Client requests for all controllers
+# Works with Development profile (https port from Properties/launchSettings.json)
+
+@baseUrl = http://localhost:5128
+@json = application/json
+
+# Unique seed for test data
+@uniq = {{$timestamp}}
+
+# Test user credentials (used for register/login)
+@username = restuser{{uniq}}
+@password = P@ssw0rd!{{uniq}}
+@email = restuser{{uniq}}@example.com
+
+# Seeded admin credentials (from DataSeeder)
+@adminUser = admin
+@adminPass = Admin123!
+
+# Variables set by responses (do not edit)
+@authToken = 
+@userId = 
+@listId = 
+@movieId = 
+@adminToken = 
+
+###
+### Public: Smoke test API (Movies list)
+GET {{baseUrl}}/api/Movies
+Accept: {{json}}
+
+###
+### Admin: Login with seeded admin user
+POST {{baseUrl}}/api/Auth/login
+Content-Type: {{json}}
+Accept: {{json}}
+
+{
+  "usernameOrEmail": "{{adminUser}}",
+  "password": "{{adminPass}}"
+}
+
+> {%
+try {
+  const res = JSON.parse(response.body);
+  if (res.accessToken) client.global.set("adminToken", res.accessToken);
+} catch (e) {}
+%}
+
+###
+### Auth: Register
+POST {{baseUrl}}/api/Auth/register
+Content-Type: {{json}}
+Accept: {{json}}
+
+{
+  "username": "{{username}}",
+  "name": "REST User {{uniq}}",
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+> {%
+try {
+  const res = JSON.parse(response.body);
+  if (res.accessToken) client.global.set("authToken", res.accessToken);
+  if (res.user && res.user.id) client.global.set("userId", res.user.id);
+  // persist what we used for login next
+  client.global.set("username", "{{username}}");
+  client.global.set("password", "{{password}}");
+} catch (e) {}
+%}
+
+###
+### Auth: Login
+POST {{baseUrl}}/api/Auth/login
+Content-Type: {{json}}
+Accept: {{json}}
+
+{
+  "usernameOrEmail": "{{username}}",
+  "password": "{{password}}"
+}
+
+> {%
+try {
+  const res = JSON.parse(response.body);
+  if (res.accessToken) client.global.set("authToken", res.accessToken);
+  if (res.user && res.user.id) client.global.set("userId", res.user.id);
+} catch (e) {}
+%}
+
+###
+### Auth: Me (requires bearer token)
+GET {{baseUrl}}/api/Auth/me
+Accept: {{json}}
+Authorization: Bearer {{authToken}}
+
+> {%
+try {
+  const me = JSON.parse(response.body);
+  if (me && me.id) client.global.set("userId", me.id);
+} catch (e) {}
+%}
+
+###
+### Users: Get all (public)
+GET {{baseUrl}}/api/Users
+Accept: {{json}}
+
+###
+### Users: Get by id (public)
+GET {{baseUrl}}/api/Users/{{userId}}
+Accept: {{json}}
+
+###
+### Users: Update self (SelfOrAdmin)
+PUT {{baseUrl}}/api/Users/{{userId}}
+Content-Type: {{json}}
+Accept: {{json}}
+Authorization: Bearer {{authToken}}
+
+{
+  "name": "Updated REST User {{uniq}}",
+  "email": "updated{{uniq}}@example.com"
+}
+
+###
+### Users: Delete self (SelfOrAdmin)
+# Note: This will delete the account you just created
+DELETE {{baseUrl}}/api/Users/{{userId}}
+Accept: {{json}}
+Authorization: Bearer {{authToken}}
+
+###
+### Lists: Get all (public)
+GET {{baseUrl}}/api/Lists
+Accept: {{json}}
+
+###
+### Lists: Create (requires bearer token)
+POST {{baseUrl}}/api/Lists
+Content-Type: {{json}}
+Accept: {{json}}
+Authorization: Bearer {{authToken}}
+
+{
+  "title": "My List {{uniq}}",
+  "movies": []
+}
+
+> {%
+try {
+  const res = JSON.parse(response.body);
+  if (res && res.id) client.global.set("listId", res.id);
+} catch (e) {}
+%}
+
+###
+### Lists: Update to include first movie (owner or admin)
+PUT {{baseUrl}}/api/Lists/{{listId}}
+Content-Type: {{json}}
+Accept: {{json}}
+Authorization: Bearer {{authToken}}
+
+{
+  "title": "My Updated List {{uniq}}",
+  "movies": ["{{movieId}}"]
+}
+
+###
+### Lists: Get by id (public)
+GET {{baseUrl}}/api/Lists/{{listId}}
+Accept: {{json}}
+
+###
+### Lists: Update (owner or admin)
+PUT {{baseUrl}}/api/Lists/{{listId}}
+Content-Type: {{json}}
+Accept: {{json}}
+Authorization: Bearer {{authToken}}
+
+{
+  "title": "My Updated List {{uniq}}",
+  "movies": []
+}
+
+###
+### Lists: Delete (owner or admin)
+DELETE {{baseUrl}}/api/Lists/{{listId}}
+Accept: {{json}}
+Authorization: Bearer {{authToken}}
+
+###
+### Movies: Get all (public)
+GET {{baseUrl}}/api/Movies
+Accept: {{json}}
+
+> {%
+try {
+  const data = JSON.parse(response.body);
+  if (Array.isArray(data) && data.length > 0 && data[0].id) {
+    client.global.set("movieId", data[0].id);
+  }
+} catch (e) {}
+%}
+
+###
+### Movies: Get by id (public)
+GET {{baseUrl}}/api/Movies/{{movieId}}
+Accept: {{json}}
+
+###
+### Movies: Create (AdminOnly)
+# Run "Admin: Login" above to populate @adminToken (or paste manually)
+POST {{baseUrl}}/api/Movies
+Content-Type: {{json}}
+Accept: {{json}}
+Authorization: Bearer {{adminToken}}
+
+{
+  "title": "Example Movie {{uniq}}",
+  "releaseDate": "2024-01-01",
+  "genre": 0,
+  "description": "Sample description",
+  "studio": "Sample Studio",
+  "cast": [
+    { "name": "Actor One", "role": 0 },
+    { "name": "Director One", "role": 1 }
+  ],
+  "image": "https://example.com/poster.jpg",
+  "thumbnailImage": "https://example.com/thumb.jpg",
+  "budget": 100000000
+}
+
+> {%
+try {
+  const res = JSON.parse(response.body);
+  if (res && res.id) client.global.set("movieId", res.id);
+} catch (e) {}
+%}
+
+###
+### Movies: Update (AdminOnly)
+PUT {{baseUrl}}/api/Movies/{{movieId}}
+Content-Type: {{json}}
+Accept: {{json}}
+Authorization: Bearer {{adminToken}}
+
+{
+  "title": "Updated Example Movie {{uniq}}",
+  "releaseDate": "2024-02-02",
+  "genre": 1,
+  "description": "Updated description",
+  "studio": "Updated Studio",
+  "cast": [
+    { "name": "Actor One", "role": 0 }
+  ],
+  "image": "https://example.com/poster2.jpg",
+  "thumbnailImage": "https://example.com/thumb2.jpg",
+  "budget": 110000000
+}
+
+###
+### Movies: Delete (AdminOnly)
+DELETE {{baseUrl}}/api/Movies/{{movieId}}
+Accept: {{json}}
+Authorization: Bearer {{adminToken}}
+
+###
+### Users (AdminOnly): Create user
+# Requires a valid admin token pasted into @adminToken above
+POST {{baseUrl}}/api/Users
+Content-Type: {{json}}
+Accept: {{json}}
+Authorization: Bearer {{adminToken}}
+
+{
+  "username": "managed{{uniq}}",
+  "name": "Managed User {{uniq}}",
+  "email": "managed{{uniq}}@example.com",
+  "password": "P@ssw0rd!{{uniq}}",
+  "role": 1
+}

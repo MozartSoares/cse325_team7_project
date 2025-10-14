@@ -1,0 +1,94 @@
+@rendermode InteractiveServer
+@implements IDisposable
+@inject AuthDialogService AuthDialogs
+@inject AuthStateService AuthState
+
+<LoginModal Show="@showLoginModal"
+            OnClose="HideLoginModal"
+            OnLoginSuccess="HandleAuthenticated"
+            OnSwitchToRegister="OpenRegisterFromLogin" />
+
+<RegisterModal Show="@showRegisterModal"
+               OnClose="HideRegisterModal"
+               OnRegistrationSuccess="HandleAuthenticated"
+               OnSwitchToLogin="OpenLoginFromRegister" />
+
+@code {
+    private bool showLoginModal;
+    private bool showRegisterModal;
+
+    protected override void OnInitialized()
+    {
+        AuthDialogs.LoginRequested += HandleLoginRequested;
+        AuthDialogs.RegistrationRequested += HandleRegistrationRequested;
+        AuthState.AuthStateChanged += HandleAuthStateChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await AuthState.EnsureInitializedAsync();
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void HandleLoginRequested()
+    {
+        showRegisterModal = false;
+        showLoginModal = true;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void HandleRegistrationRequested()
+    {
+        showLoginModal = false;
+        showRegisterModal = true;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private Task HideLoginModal()
+    {
+        showLoginModal = false;
+        return InvokeAsync(StateHasChanged);
+    }
+
+    private Task HideRegisterModal()
+    {
+        showRegisterModal = false;
+        return InvokeAsync(StateHasChanged);
+    }
+
+    private Task OpenRegisterFromLogin()
+    {
+        showLoginModal = false;
+        showRegisterModal = true;
+        return InvokeAsync(StateHasChanged);
+    }
+
+    private Task OpenLoginFromRegister()
+    {
+        showRegisterModal = false;
+        showLoginModal = true;
+        return InvokeAsync(StateHasChanged);
+    }
+
+    private Task HandleAuthenticated()
+    {
+        showLoginModal = false;
+        showRegisterModal = false;
+        return InvokeAsync(StateHasChanged);
+    }
+
+    private void HandleAuthStateChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        AuthDialogs.LoginRequested -= HandleLoginRequested;
+        AuthDialogs.RegistrationRequested -= HandleRegistrationRequested;
+        AuthState.AuthStateChanged -= HandleAuthStateChanged;
+    }
+}
