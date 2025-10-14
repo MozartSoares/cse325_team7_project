@@ -1,0 +1,47 @@
+@if (Show)
+{
+    <div class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>@Title</h3>
+            </div>
+            <div class="modal-body">
+                @ChildContent
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" @onclick="(e) => OnDecline.InvokeAsync()">@DeclineText</button>
+                @if (!string.IsNullOrEmpty(AcceptText)) {
+                    <button class="btn btn-primary" @onclick="HandleAccept">@AcceptText</button>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public string? Title { get; set; }
+
+    [Parameter]
+    public string? DeclineText { get; set; } = "Cancel";
+
+    [Parameter]
+    public string? AcceptText { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public bool Show { get; set; }
+
+    [Parameter]
+    public EventCallback OnDecline { get; set; }
+
+    [Parameter]
+    public EventCallback OnAccept { get; set; }
+
+    private async Task HandleAccept()
+    {
+        await OnAccept.InvokeAsync();
+    }
+}

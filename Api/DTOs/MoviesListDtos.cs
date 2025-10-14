@@ -1,14 +1,25 @@
 namespace cse325_team7_project.Api.DTOs;
 
-public record MoviesListCreateDto(
-    string Title,
-    List<string>? Movies
-);
+using System.ComponentModel.DataAnnotations;
 
-public record MoviesListUpdateDto(
-    string Title,
-    List<string>? Movies
-);
+public class MoviesListCreateDto
+{
+    [Required]
+    [StringLength(100)]
+    public string Title { get; set; } = string.Empty;
+
+    public List<string>? Movies { get; set; } = new List<string>();
+}
+
+public class MoviesListUpdateDto
+{
+    [Required]
+    [StringLength(100)]
+    public string Title { get; set; } = string.Empty;
+
+    [MaxLength(50)]
+    public List<string>? Movies { get; set; } = new List<string>();
+}
 
 public record MoviesListResponseDto(
     string Id,
