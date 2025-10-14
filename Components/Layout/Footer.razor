@@ -5,14 +5,17 @@
     <p> © CSE-325 - MovieHub</p>
     
     <div class="theme-toggle-footer">
-        <button class="theme-toggle-btn" @onclick="ToggleTheme" title="Toggle theme">
+        <button class="theme-toggle-btn" 
+                @onclick="ToggleTheme" 
+                aria-label="@(isDarkMode ? "Switch to light mode" : "Switch to dark mode")"
+                aria-pressed="@isDarkMode.ToString().ToLower()">
             @if (isDarkMode)
             {
-                <span class="theme-icon">☀️</span>
+                <span class="theme-icon" aria-hidden="true">☀️</span>
             }
             else
             {
-                <span class="theme-icon">🌙</span>
+                <span class="theme-icon" aria-hidden="true">🌙</span>
             }
         </button>
     </div>

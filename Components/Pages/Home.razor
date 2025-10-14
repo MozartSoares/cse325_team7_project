@@ -3,10 +3,30 @@
 
 <PageTitle>MovieHub7</PageTitle>
 
+<div class="hero-section">
+    <div class="hero-content">
+        <div class="hero-left">
+            <h1 class="hero-title">Don't just watch — keep what you love.</h1>
+            <button class="hero-signup-btn" @onclick="NavigateToSignUp">Sign Up Now</button>
+        </div>
+        <div class="hero-right">
+            <p class="hero-description">
+                <span class="hero-tagline">Discover. Save. Watch Later.</span>
+                Keep track of the movies you love and the ones you can't wait to see. Create your personal movie list, explore trending titles, and never lose a great film again. Bookmark your favorites today and plan your next movie night with ease!
+            </p>
+        </div>
+    </div>
+</div>
+
 <Movies />
 
 
 @code 
 {
-
+    private void NavigateToSignUp()
+    {
+        // TODO: Implement navigation to sign up page
+        // For now, this is a placeholder
+        Console.WriteLine("Sign Up button clicked");
+    }
 }
