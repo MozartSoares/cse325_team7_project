@@ -1,0 +1,113 @@
+@using System.ComponentModel.DataAnnotations
+@using cse325_team7_project.Api.DTOs
+@inject AuthApiClient AuthApi
+@inject AuthStateService AuthState
+
+<Modal Title="Log in" Show="Show" OnDecline="HandleDecline" DeclineText="Cancel">
+    <EditForm Model="loginModel" OnValidSubmit="HandleSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <div class="auth-error">@errorMessage</div>
+        }
+
+        <div class="form-group">
+            <label for="login-identifier">Username or Email</label>
+            <InputText id="login-identifier" class="form-control" @bind-Value="loginModel.Identifier" />
+            <ValidationMessage For="@(() => loginModel.Identifier)" />
+        </div>
+
+        <div class="form-group">
+            <label for="login-password">Password</label>
+            <InputText id="login-password" class="form-control" @bind-Value="loginModel.Password" type="password" />
+            <ValidationMessage For="@(() => loginModel.Password)" />
+        </div>
+
+        <button class="btn btn-primary w-100" type="submit" disabled="@isSubmitting">
+            @(isSubmitting ? "Logging in..." : "Log in")
+        </button>
+    </EditForm>
+
+    <p class="auth-switch">
+        Don't have an account?
+        <button class="link-button" @onclick="RequestRegistration" type="button">Sign up</button>
+    </p>
+</Modal>
+
+@code {
+    [Parameter] public bool Show { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback OnLoginSuccess { get; set; }
+    [Parameter] public EventCallback OnSwitchToRegister { get; set; }
+
+    private readonly LoginModel loginModel = new();
+    private string? errorMessage;
+    private bool isSubmitting;
+
+    private async Task HandleSubmit()
+    {
+        if (isSubmitting)
+        {
+            return;
+        }
+
+        errorMessage = null;
+        isSubmitting = true;
+
+        try
+        {
+            var dto = new AuthLoginDto(loginModel.Identifier, loginModel.Password);
+            var response = await AuthApi.LoginAsync(dto);
+            await AuthState.SetAuthAsync(response);
+            await OnLoginSuccess.InvokeAsync();
+            await CloseAsync();
+        }
+        catch (ApiException ex)
+        {
+            errorMessage = ex.Message;
+        }
+        catch (Exception)
+        {
+            errorMessage = "An unexpected error occurred. Please try again.";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private async Task HandleDecline()
+    {
+        await CloseAsync();
+    }
+
+    private async Task CloseAsync()
+    {
+        loginModel.Reset();
+        errorMessage = null;
+        await OnClose.InvokeAsync();
+    }
+
+    private async Task RequestRegistration()
+    {
+        await CloseAsync();
+        await OnSwitchToRegister.InvokeAsync();
+    }
+
+    private class LoginModel
+    {
+        [Required(ErrorMessage = "Username or email is required.")]
+        public string Identifier { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Password is required.")]
+        public string Password { get; set; } = string.Empty;
+
+        public void Reset()
+        {
+            Identifier = string.Empty;
+            Password = string.Empty;
+        }
+    }
+}

@@ -1,27 +1,78 @@
-﻿@using Microsoft.AspNetCore.Components.Forms
+﻿@using cse325_team7_project.Components.Services
+@rendermode InteractiveServer
+@implements IDisposable
+@inject AuthStateService AuthState
+@inject AuthDialogService AuthDialogs
 
 <a class="logo-container" href="/">
 <img class="logo" src="img/logo.svg"/>
 </a>
 
 <nav>
-    <div class="nav-item px-5">
-        <NavLink class="navLink user-link" href="/" Match="NavLinkMatch.All">
-        User
+    @if (!AuthState.IsAuthenticated)
+    {
+        <button class="nav-button nav-button-secondary" type="button" @onclick="ShowLogin">Log in</button>
+        <button class="nav-button nav-button-primary" type="button" @onclick="ShowRegistration">Sign up</button>
+    }
+    else
+    {
+        <NavLink class="user-pill" href="@UserProfileHref" title="View profile">
+            <div class="avatar-circle">@UserInitial</div>
+            <span class="user-name">@UserDisplayName</span>
         </NavLink>
-    </div>
+    }
 </nav>
 
 @code
 {
-    // Simple search model - no need for full domain model
-    private SearchModel searchModel = new SearchModel();
-    
-    //placeholder for search functionality
-    public class SearchModel
+    protected override void OnInitialized()
     {
-        public string Title { get; set; } = string.Empty;
+        AuthState.AuthStateChanged += HandleAuthStateChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await AuthState.EnsureInitializedAsync();
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void HandleAuthStateChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void ShowLogin() => AuthDialogs.ShowLogin();
+
+    private void ShowRegistration() => AuthDialogs.ShowRegistration();
+
+    private string UserDisplayName => !string.IsNullOrWhiteSpace(AuthState.CurrentUser?.Name)
+        ? AuthState.CurrentUser!.Name
+        : AuthState.CurrentUser?.Username ?? "User";
+
+    private string UserInitial => GetInitial(AuthState.CurrentUser?.Name)
+        ?? GetInitial(AuthState.CurrentUser?.Username)
+        ?? "?";
+
+    private string UserProfileHref => AuthState.CurrentUser is null
+        ? "/user"
+        : $"/user/{AuthState.CurrentUser.Id}";
+
+    private static string? GetInitial(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        var trimmed = value.Trim();
+        return string.IsNullOrEmpty(trimmed) ? null : trimmed.Substring(0, 1).ToUpperInvariant();
+    }
+
+    public void Dispose()
+    {
+        AuthState.AuthStateChanged -= HandleAuthStateChanged;
     }
 }
-
-

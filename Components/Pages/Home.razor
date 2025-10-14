@@ -1,5 +1,6 @@
 ﻿@page "/"
 @rendermode InteractiveServer
+@inject AuthDialogService AuthDialogs
 
 <PageTitle>MovieHub7</PageTitle>
 
@@ -25,8 +26,6 @@
 {
     private void NavigateToSignUp()
     {
-        // TODO: Implement navigation to sign up page
-        // For now, this is a placeholder
-        Console.WriteLine("Sign Up button clicked");
+        AuthDialogs.ShowRegistration();
     }
 }

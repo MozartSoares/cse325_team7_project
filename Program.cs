@@ -1,4 +1,5 @@
 using cse325_team7_project.Components;
+using cse325_team7_project.Components.Services;
 using cse325_team7_project.Api.Options;
 using cse325_team7_project.Api.Services;
 using cse325_team7_project.Api.Services.Interfaces;
@@ -29,7 +30,14 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 // Add HttpClient for Blazor components to call our own API
-builder.Services.AddHttpClient();
+builder.Services.AddTransient<AuthTokenHandler>();
+builder.Services.AddHttpClient("AppClient")
+    .AddHttpMessageHandler<AuthTokenHandler>();
+builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("AppClient"));
+
+builder.Services.AddScoped<AuthStateService>();
+builder.Services.AddScoped<AuthDialogService>();
+builder.Services.AddScoped<AuthApiClient>();
 
 // --- API layer ----------------------------------------------------------------
 // Enable controllers and insert our ObjectId binder at the front of the provider
