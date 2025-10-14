@@ -3,6 +3,7 @@
 @using cse325_team7_project.Api.DTOs;
 @using cse325_team7_project.Domain.Enums;
 @using cse325_team7_project.Domain.ValueObjects;
+@using cse325_team7_project.Components.Shared
 @inject HttpClient Http
 @inject NavigationManager Nav
 
@@ -17,27 +18,42 @@
     }
     else
     {
-        <div class="movie-details">
+        <div class="movie-details-card movie-details">
             <div class="movie-details-image">
                 <img src="@Movie.Image" alt="@Movie.Title" />
             </div>
+
             <div class="movie-details-info">
-                <h2>@Movie.Title @if (isUsingPlaceholderData) { <span class="muted">(Demo Data)</span> }</h2>
-                <p class="movie-details-genre">@Movie.Genre.ToString() • @Movie.ReleaseDate.Year</p>
-                <p class="movie-details-studio">Studio: @Movie.Studio</p>
+                <div class="movie-details-header">
+                    <h2 class="mb-1">@Movie.Title</h2>
+                    @if (isUsingPlaceholderData)
+                    {
+                        <span class="muted">(Demo Data)</span>
+                    }
+                </div>
+
+                @* <p class="movie-details-meta">Id: <code>@Movie.Id</code></p> *@
+                <p class="movie-details-meta">Release: @Movie.ReleaseDate.ToString("MMMM d, yyyy")</p>
+                <p class="movie-details-meta">Genre: @Movie.Genre.ToString()</p>
+                <p class="movie-details-meta">Studio: @Movie.Studio</p>
                 <p class="movie-details-budget">Budget: $@Movie.Budget.ToString("N0")</p>
-                <p class="movie-details-description">@Movie.Description</p>
+
+                <div class="movie-details-description">@Movie.Description</div>
 
                 @if (Movie.Cast != null && Movie.Cast.Count > 0)
                 {
-                    <h4>Cast</h4>
-                    <ul>
+                    <h4 class="mt-3">Cast</h4>
+                    <ul class="movie-cast-list">
                         @foreach (var c in Movie.Cast)
                         {
                             <li>@c.Name (@c.Role.ToString())</li>
                         }
                     </ul>
                 }
+
+                <div class="mt-3">
+                    <a class="btn btn-secondary" href="/" role="button">Back</a>
+                </div>
                 <div class="detail-action-buttons">
                     <button class="detail-blue-button" @onclick="ShowAddModal">Add to list</button>
                     <button class="detail-blue-button" @onclick="ShowEditModal">Edit</button>
@@ -161,7 +177,6 @@
                     <InputNumber @bind-Value="movieUpdateDto.Budget" class="form-control" />
                     <ValidationMessage For="@(() => movieUpdateDto.Budget)" />
                 </div>
-
                 <button type="submit" class="btn btn-primary" disabled="@isChanged">Save</button>
             </EditForm>
             }
@@ -179,7 +194,6 @@
     public string Id { get; set; } = string.Empty;
 
     private MovieResponseDto? Movie;
-    
     private bool isUsingPlaceholderData = false;
     private bool loadAttempted = false;
 
@@ -189,8 +203,6 @@
     private bool isChanged = true;
     private List<MoviesListResponseDto>? movieLists = new();
     private string selectedListId = string.Empty;
-
-
     protected override async Task OnInitializedAsync()
     {
         try
@@ -230,6 +242,11 @@
         }
 
         loadAttempted = true;
+    }
+
+    private void GoBack()
+    {
+        Nav.NavigateTo("/movies");
     }
 
     private List<MovieResponseDto> GetPlaceholderMovies() => MockData.GetPlaceholderMovies2(); 

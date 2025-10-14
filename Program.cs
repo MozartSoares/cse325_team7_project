@@ -119,14 +119,14 @@ builder.Services.AddSingleton<IMongoClient>(sp =>
 {
     var config = sp.GetRequiredService<IConfiguration>();
     var logger = sp.GetRequiredService<ILogger<Program>>();
-    logger.LogInformation("MongoDB connection string: {ConnectionString}", mongoSection["ConnectionString"]);
+    // logger.LogInformation("MongoDB connection string: {ConnectionString}", mongoSection["ConnectionString"]);
     var cs = mongoSection["ConnectionString"] ?? throw new InvalidOperationException("MongoDB connection string is not set");
     return new MongoClient(cs);
 });
 builder.Services.AddSingleton(sp =>
 {
     var config = sp.GetRequiredService<IConfiguration>();
-    var dbName = mongoSection["Database"] ?? "moviehub";
+    var dbName = mongoSection["Database"] ?? "MovieHubDb";
     return sp.GetRequiredService<IMongoClient>().GetDatabase(dbName);
 });
 builder.Services.AddSingleton<IMongoCollection<Movie>>(sp => sp.GetRequiredService<IMongoDatabase>().GetCollection<Movie>("movies"));
