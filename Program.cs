@@ -1,4 +1,5 @@
 using cse325_team7_project.Components;
+using cse325_team7_project.Components.Services;
 using cse325_team7_project.Api.Options;
 using cse325_team7_project.Api.Services;
 using cse325_team7_project.Api.Services.Interfaces;
@@ -11,6 +12,7 @@ using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
 using System.Text;
 using cse325_team7_project.Domain.Enums;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,7 +31,16 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 // Add HttpClient for Blazor components to call our own API
-builder.Services.AddHttpClient();
+builder.Services.AddTransient<AuthTokenHandler>();
+builder.Services.AddHttpClient("AppClient")
+    .AddHttpMessageHandler<AuthTokenHandler>();
+builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("AppClient"));
+
+builder.Services.AddHttpClient("AuthRefresh");
+
+builder.Services.AddScoped<AuthStateService>();
+builder.Services.AddScoped<AuthDialogService>();
+builder.Services.AddScoped<AuthApiClient>();
 
 // --- API layer ----------------------------------------------------------------
 // Enable controllers and insert our ObjectId binder at the front of the provider
@@ -73,7 +84,7 @@ builder.Services
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
             ValidateLifetime = true,
             ClockSkew = TimeSpan.FromMinutes(1),
-            RoleClaimType = "role"
+            RoleClaimType = ClaimTypes.Role
         };
 
         // Return JSON payloads for 401/403 to match existing error middleware shape.
@@ -102,7 +113,11 @@ builder.Services
     });
 
 builder.Services.AddAuthorizationBuilder()
-    .AddPolicy("AdminOnly", policy => policy.RequireAssertion(ctx => ctx.User.IsAdmin()))
+    .AddPolicy("AdminOnly", policy =>
+    {
+        // Be robust to either ClaimTypes.Role or custom "role" claim
+        policy.RequireAssertion(ctx => ctx.User.IsAdmin());
+    })
     .AddPolicy("SelfOrAdmin", policy => policy.RequireAssertion(ctx =>
     {
         var http = (ctx.Resource as Microsoft.AspNetCore.Mvc.Filters.AuthorizationFilterContext)?.HttpContext ?? ctx.Resource as HttpContext;
@@ -163,9 +178,7 @@ app.UseAuthorization();
 app.UseAntiforgery();
 
 app.MapStaticAssets();
-app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
-
+app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 app.MapControllers();
 
 // --- Database bootstrap (indexes) -------------------------------------------

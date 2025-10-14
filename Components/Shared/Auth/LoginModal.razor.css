@@ -1,0 +1,46 @@
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 12px;
+}
+
+.form-control {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 0.95rem;
+}
+
+.form-control:focus {
+    border-color: #007bff;
+    outline: none;
+}
+
+.auth-error {
+    margin-bottom: 12px;
+    color: #b00020;
+    font-size: 0.9rem;
+}
+
+.auth-switch {
+    margin-top: 15px;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.link-button {
+    background: none;
+    border: none;
+    color: #007bff;
+    cursor: pointer;
+    padding: 0;
+}
+
+.link-button:hover {
+    text-decoration: underline;
+}
+
+.w-100 {
+    width: 100%;
+}

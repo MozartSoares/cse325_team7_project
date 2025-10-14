@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace cse325_team7_project.Api.Services;
@@ -117,6 +118,53 @@ public class AuthService : IAuthService
         return BuildAuthResult(user);
     }
 
+    public async Task<AuthResult> Refresh(string accessToken)
+    {
+        var token = Normalize(accessToken);
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            throw new ValidationException("Access token is required.");
+        }
+
+        var handler = new JwtSecurityTokenHandler();
+        var parameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = _jwtOptions.Issuer,
+            ValidateAudience = true,
+            ValidAudience = _jwtOptions.Audience,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.Key)),
+            ValidateLifetime = false,
+            ClockSkew = TimeSpan.Zero,
+            RoleClaimType = "role"
+        };
+
+        try
+        {
+            var principal = handler.ValidateToken(token, parameters, out var validatedToken);
+            if (validatedToken is not JwtSecurityToken jwt ||
+                !jwt.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new UnauthorizedException("Invalid token.");
+            }
+
+            var userIdValue = principal.FindFirstValue(ClaimTypes.NameIdentifier) ?? principal.FindFirstValue(JwtRegisteredClaimNames.Sub);
+            if (string.IsNullOrWhiteSpace(userIdValue) || !MongoDB.Bson.ObjectId.TryParse(userIdValue, out var userId))
+            {
+                throw new UnauthorizedException("Invalid token subject.");
+            }
+
+            var user = await _userService.Get(userId);
+            return BuildAuthResult(user);
+        }
+        catch (SecurityTokenException ex)
+        {
+            _logger.LogWarning(ex, "Failed to validate access token during refresh.");
+            throw new UnauthorizedException("Invalid token.");
+        }
+    }
+
     private static string Normalize(string? value) => value?.Trim() ?? string.Empty;
 
     private async Task<User?> FindByUsernameOrEmail(string identifier)
@@ -148,7 +196,8 @@ public class AuthService : IAuthService
             new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new(JwtRegisteredClaimNames.UniqueName, user.Username),
-            new("role", user.Role.ToString())
+            new("role", user.Role.ToString()),
+            new(ClaimTypes.Role, user.Role.ToString())
         };
 
         if (!string.IsNullOrWhiteSpace(user.Email))

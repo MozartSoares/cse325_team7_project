@@ -1,27 +1,137 @@
-﻿@using Microsoft.AspNetCore.Components.Forms
+﻿@using cse325_team7_project.Components.Services
+@rendermode InteractiveServer
+@implements IDisposable
+@inject AuthStateService AuthState
+@inject AuthDialogService AuthDialogs
+@inject NavigationManager Nav
 
 <a class="logo-container" href="/">
 <img class="logo" src="img/logo.svg"/>
 </a>
 
-<nav>
-    <div class="nav-item px-5">
-        <NavLink class="navLink user-link" href="/" Match="NavLinkMatch.All">
-        User
-        </NavLink>
-    </div>
+<nav @onclick="CloseMenu">
+    @if (!AuthState.IsAuthenticated)
+    {
+        <button class="nav-button nav-button-secondary" type="button" @onclick="ShowLogin">Log in</button>
+        <button class="nav-button nav-button-primary" type="button" @onclick="ShowRegistration">Sign up</button>
+    }
+    else
+    {
+        <div class="user-menu"
+             tabindex="0"
+             @onclick:stopPropagation="true">
+            <button class="user-menu-button" type="button" @onclick="ToggleMenu">
+                <div class="avatar-circle">@UserInitial</div>
+                <span class="user-name">@UserDisplayName</span>
+                <span class="chevron" aria-hidden="true">▾</span>
+            </button>
+            @if (isMenuOpen)
+            {
+                <div class="user-dropdown">
+                    <a href="@UserProfileHref"
+                       class="user-dropdown-item"
+                       @onclick="GoToProfile"
+                       @onclick:stopPropagation="true"
+                       @onclick:preventDefault="true">Profile</a>
+                    <button type="button"
+                            class="user-dropdown-item logout"
+                            @onclick="LogoutAsync"
+                            @onclick:stopPropagation="true">Logout</button>
+                </div>
+            }
+        </div>
+    }
 </nav>
 
 @code
 {
-    // Simple search model - no need for full domain model
-    private SearchModel searchModel = new SearchModel();
-    
-    //placeholder for search functionality
-    public class SearchModel
+    protected override void OnInitialized()
     {
-        public string Title { get; set; } = string.Empty;
+        AuthState.AuthStateChanged += HandleAuthStateChanged;
+        Nav.LocationChanged += HandleLocationChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await AuthState.EnsureInitializedAsync();
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void HandleAuthStateChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void HandleLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        CloseMenu();
+    }
+
+    private void ShowLogin() => AuthDialogs.ShowLogin();
+
+    private void ShowRegistration() => AuthDialogs.ShowRegistration();
+
+    private string UserDisplayName => !string.IsNullOrWhiteSpace(AuthState.CurrentUser?.Name)
+        ? AuthState.CurrentUser!.Name
+        : AuthState.CurrentUser?.Username ?? "User";
+
+    private string UserInitial => GetInitial(AuthState.CurrentUser?.Name)
+        ?? GetInitial(AuthState.CurrentUser?.Username)
+        ?? "?";
+
+    private string UserProfileHref => AuthState.CurrentUser is null
+        ? "/user"
+        : $"/user/{AuthState.CurrentUser.Id}";
+
+    private static string? GetInitial(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        var trimmed = value.Trim();
+        return string.IsNullOrEmpty(trimmed) ? null : trimmed.Substring(0, 1).ToUpperInvariant();
+    }
+
+    private bool isMenuOpen;
+
+    private void ToggleMenu()
+    {
+        isMenuOpen = !isMenuOpen;
+    }
+
+    private void CloseMenu()
+    {
+        if (isMenuOpen)
+        {
+            isMenuOpen = false;
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void GoToProfile()
+    {
+        CloseMenu();
+        if (!string.IsNullOrWhiteSpace(UserProfileHref))
+        {
+            Nav.NavigateTo(UserProfileHref);
+        }
+    }
+
+    private async Task LogoutAsync()
+    {
+        await AuthState.ClearAsync();
+        Nav.NavigateTo("/");
+        CloseMenu();
+    }
+
+    public void Dispose()
+    {
+        AuthState.AuthStateChanged -= HandleAuthStateChanged;
+        Nav.LocationChanged -= HandleLocationChanged;
     }
 }
-
-

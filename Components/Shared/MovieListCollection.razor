@@ -1,29 +1,31 @@
 @using cse325_team7_project.Api.DTOs
+@using cse325_team7_project.Components.Services
 @using cse325_team7_project.Domain.Enums
 @using cse325_team7_project.Domain.ValueObjects
+@implements IDisposable
 @inject HttpClient HttpClient
 @inject NavigationManager Nav
+@inject AuthStateService AuthState
 
 
-@*
-    Displays a loading message if the movie list or all movies are not yet loaded.
-    Otherwise, renders the movie list container with its title, a copy button,
-    and a grid of movie cards for each movie in the list.
-*@
-@if (movieList == null || allMovies == null)
-{
-    <p>Loading list...</p>
-}
-else
+
+
+@if (!isDeleted && !notFound)
 {
     <div class="movie-list-container">
         <div class="movie-list-header">
+            @if (movieList != null)
+            {
             <span>@movieList.Title</span>
             <div class="list-action-buttons">
-                <button class="list-red-button" @onclick="ShowDeleteModal">Delete</button>
-                <button class="list-blue-button" @onclick="ShowEditModal">Edit</button>
+                @if (CanManageList)
+                {
+                    <button class="list-red-button" @onclick="ShowDeleteModal">Delete</button>
+                    <button class="list-blue-button" @onclick="ShowEditModal">Edit</button>
+                }
                 <button class="list-blue-button" @onclick="Share">Share</button>
-            </div>
+                </div>
+            }
         </div>
 
         <div class="movie-list">
@@ -31,15 +33,26 @@ else
                 Iterates through each movie ID in the list.
                 For each ID, finds the matching movie in allMovies and renders a MovieItem component.
             *@
-            @if (movieList.Movies != null && movieList.Movies.Any())
+            @if (movieList != null && movieList.Movies != null && movieList.Movies.Any() && allMovies != null)
             {
                 @foreach (var id in movieList.Movies)
                 {
-                    // Check if the movie ID matches any of the IDs in allMovies
                     var movie = allMovies.FirstOrDefault(m => m.Id == id);
-                    if (movie != null) // Only render the MovieItem if there's a match
+                    if (movie != null)
                     {
-                        <MovieItem movie=@movie />
+                        <div class="movie-list-item">
+                            <MovieItem movie=@movie />
+                            @if (CanManageList)
+                            {
+                                <div class="movie-inline-actions">
+                                    <button class="list-red-button" @onclick="() => RemoveMovieFromList(movie.Id)">Remove</button>
+                                    @if (IsAdmin)
+                                    {
+                                        <a class="list-blue-button" href="@($"/movies/{movie.Id}")">Edit Movie</a>
+                                    }
+                                </div>
+                            }
+                        </div>
                     }
                 }
             }
@@ -51,11 +64,11 @@ else
     </div>
 
     <Modal Title="Confirmation" AcceptText="Confirm" Show="@deleteModalVisible" OnDecline="CloseDeleteModal" OnAccept="HandleDeleteSubmit">
-        <p>Do you want to detele the list "@movieList.Title"?</p>
+        <p>Do you want to delete the list "@movieList?.Title"?</p>
     </Modal>
 
     <Modal Title="Edit List" Show="@editModalVisible" OnDecline="CloseEditModal">
-        @if (listUpdateDto != null)
+        @if (listUpdateDto != null && movieList != null)
         {
             <EditForm EditContext="@editContext" OnValidSubmit="HandleEditSubmit">
                 <DataAnnotationsValidator />
@@ -71,6 +84,7 @@ else
     </Modal>
 }
 
+
 @code {
     /// <summary>
     /// Gets or sets the ID of the movie list to display.
@@ -80,6 +94,9 @@ else
     /// </value>
     [Parameter]
     public string? movieListId { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnDeleted { get; set; }
 
     /// <summary>
     /// Stores the full list of movies fetched from the API.
@@ -96,12 +113,26 @@ else
     private EditContext? editContext;
     private bool isChanged = true;
 
+    private bool isDeleted = false;
+    private bool notFound = false;
+
+    private bool IsAdmin => AuthState.CurrentUser?.Role == UserRole.Admin;
+    private bool IsOwner => movieList is not null && AuthState.CurrentUser?.Lists?.Contains(movieList.Id) == true;
+    private bool CanManageList => IsAdmin || IsOwner;
+
+    protected override void OnInitialized()
+    {
+        AuthState.AuthStateChanged += HandleAuthStateChanged;
+    }
+
     /// <summary>
     /// Fetches movie and list data from the API when the component initializes.
     /// Falls back to placeholder data if an error occurs.
     /// </summary>
     protected override async Task OnInitializedAsync()
     {
+        await AuthState.EnsureInitializedAsync();
+
         try
         {
             // Fetch all movies from the API
@@ -111,10 +142,9 @@ else
         }
         catch (Exception ex)
         {
-            // Log the error and use placeholder data if the API call fails
+            // If the list was deleted or not found, hide this component gracefully
+            notFound = true;
             Console.WriteLine($"Error loading movies from API: {ex.Message}");
-            allMovies = GetPlaceholderMovies();
-            movieList = GetPlaceholderList();
         }
         if (movieList != null)
         {
@@ -145,17 +175,40 @@ else
 
     @* Delete Modal *@
     private bool deleteModalVisible = false;
-    private void ShowDeleteModal() => deleteModalVisible = true;
+    private void ShowDeleteModal()
+    {
+        if (!CanManageList)
+        {
+            return;
+        }
+
+        deleteModalVisible = true;
+    }
     private void CloseDeleteModal() => deleteModalVisible = false;
 
     private async Task HandleDeleteSubmit()
     {
+        if (!CanManageList)
+        {
+            CloseDeleteModal();
+            return;
+        }
+
         try
         {
             Console.WriteLine($"Deleting list {movieList?.Title}");
             var response = await HttpClient.DeleteAsync(Nav.ToAbsoluteUri($"api/lists/{movieList?.Id}"));
 
-            if (!response.IsSuccessStatusCode)
+            if (response.IsSuccessStatusCode)
+            {
+                isDeleted = true;
+                if (!string.IsNullOrWhiteSpace(movieListId))
+                {
+                    await OnDeleted.InvokeAsync(movieListId);
+                }
+                StateHasChanged();
+            }
+            else
             {
                 var error = await response.Content.ReadAsStringAsync();
                 Console.WriteLine($"Error deleting list: {error}");
@@ -173,11 +226,25 @@ else
 
     @* Edit Modal *@
     private bool editModalVisible = false;
-    private void ShowEditModal() => editModalVisible = true;
+    private void ShowEditModal()
+    {
+        if (!CanManageList)
+        {
+            return;
+        }
+
+        editModalVisible = true;
+    }
     private void CloseEditModal() => editModalVisible = false;
 
     private async Task HandleEditSubmit()
     {
+        if (!CanManageList)
+        {
+            CloseEditModal();
+            return;
+        }
+
         try
         {
             Console.WriteLine($"Updating list {movieList?.Title}");
@@ -206,5 +273,48 @@ else
         {
             CloseEditModal();
         }
+    }
+
+    private async Task RemoveMovieFromList(string movieId)
+    {
+        if (!CanManageList || string.IsNullOrWhiteSpace(movieId) || movieList is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var update = new MoviesListUpdateDto
+            {
+                Title = movieList.Title,
+                Movies = (movieList.Movies ?? new List<string>()).Where(id => id != movieId).ToList()
+            };
+
+            var response = await HttpClient.PutAsJsonAsync(Nav.ToAbsoluteUri($"api/lists/{movieList.Id}"), update);
+            if (response.IsSuccessStatusCode)
+            {
+                movieList = await response.Content.ReadFromJsonAsync<MoviesListResponseDto>();
+                StateHasChanged();
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Error removing movie from list: {error}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+    }
+
+    private void HandleAuthStateChanged()
+    {
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        AuthState.AuthStateChanged -= HandleAuthStateChanged;
     }
 }

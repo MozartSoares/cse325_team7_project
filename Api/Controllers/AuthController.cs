@@ -1,12 +1,9 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using cse325_team7_project.Api.Common;
 using cse325_team7_project.Api.DTOs;
 using cse325_team7_project.Api.Mappings;
 using cse325_team7_project.Api.Services.Interfaces;
+using cse325_team7_project.Api.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MongoDB.Bson;
 
 namespace cse325_team7_project.Api.Controllers;
 
@@ -39,13 +36,16 @@ public class AuthController(IAuthService authService, IUserService userService) 
     [Authorize]
     public async Task<ActionResult<UserResponseDto>> Me()
     {
-        var userIdValue = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub);
-        if (string.IsNullOrWhiteSpace(userIdValue) || !ObjectId.TryParse(userIdValue, out var userId))
-        {
-            throw new UnauthorizedException("Invalid user identity.");
-        }
-
+        var userId = User.GetUserIdOrThrow();
         var user = await _userService.Get(userId);
         return Ok(user.ToDto());
+    }
+
+    [HttpPost("refresh")]
+    [AllowAnonymous]
+    public async Task<ActionResult<AuthResponseDto>> Refresh([FromBody] AuthRefreshDto dto)
+    {
+        var refreshed = await _authService.Refresh(dto.AccessToken);
+        return Ok(refreshed.ToDto());
     }
 }

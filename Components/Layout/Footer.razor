@@ -5,8 +5,8 @@
     <p> © CSE-325 - MovieHub</p>
     
     <div class="theme-toggle-footer">
+                @* @onclick="ToggleTheme"  *@
         <button class="theme-toggle-btn" 
-                @onclick="ToggleTheme" 
                 aria-label="@(isDarkMode ? "Switch to light mode" : "Switch to dark mode")"
                 aria-pressed="@isDarkMode.ToString().ToLower()">
             @if (isDarkMode)
@@ -42,7 +42,8 @@
         }
     }
 
-    private async Task ToggleTheme()
+    @* private async Task ToggleTheme()
+    //tempoorarily disabled because not every page supports dark mode
     {
         isDarkMode = !isDarkMode;
         
@@ -56,5 +57,5 @@
             await JSRuntime.InvokeVoidAsync("document.body.classList.remove", "dark-mode");
             await JSRuntime.InvokeVoidAsync("localStorage.setItem", "theme", "light");
         }
-    }
+    } *@
 }
