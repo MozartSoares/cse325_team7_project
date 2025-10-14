@@ -3,6 +3,7 @@
 @using cse325_team7_project.Api.DTOs;
 @using cse325_team7_project.Domain.Enums;
 @using cse325_team7_project.Domain.ValueObjects;
+@using cse325_team7_project.Components.Shared
 @inject HttpClient Http
 @inject NavigationManager Nav
 
@@ -52,6 +53,7 @@
 
                 <div class="mt-3">
                     <a class="btn btn-secondary" href="/" role="button">Back</a>
+                </div>
                 <div class="detail-action-buttons">
                     <button class="detail-blue-button" @onclick="ShowAddModal">Add to list</button>
                     <button class="detail-blue-button" @onclick="ShowEditModal">Edit</button>
@@ -175,7 +177,6 @@
                     <InputNumber @bind-Value="movieUpdateDto.Budget" class="form-control" />
                     <ValidationMessage For="@(() => movieUpdateDto.Budget)" />
                 </div>
-
                 <button type="submit" class="btn btn-primary" disabled="@isChanged">Save</button>
             </EditForm>
             }
@@ -193,7 +194,6 @@
     public string Id { get; set; } = string.Empty;
 
     private MovieResponseDto? Movie;
-    
     private bool isUsingPlaceholderData = false;
     private bool loadAttempted = false;
 
@@ -203,8 +203,6 @@
     private bool isChanged = true;
     private List<MoviesListResponseDto>? movieLists = new();
     private string selectedListId = string.Empty;
-
-
     protected override async Task OnInitializedAsync()
     {
         try
