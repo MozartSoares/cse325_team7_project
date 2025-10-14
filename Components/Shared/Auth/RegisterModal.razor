@@ -1,9 +1,14 @@
 @using System.ComponentModel.DataAnnotations
+@using System.Net
+@using System.Text.Json
 @using cse325_team7_project.Api.DTOs
+@using cse325_team7_project.Domain.Enums
 @inject AuthApiClient AuthApi
 @inject AuthStateService AuthState
+@inject HttpClient HttpClient
+@inject NavigationManager Navigation
 
-<Modal Title="Create your account" Show="Show" OnDecline="HandleDecline" DeclineText="Cancel">
+<Modal Title="@Title" Show="Show" OnDecline="HandleDecline" DeclineText="Cancel">
     <EditForm Model="registerModel" OnValidSubmit="HandleSubmit">
         <DataAnnotationsValidator />
         <ValidationSummary />
@@ -44,14 +49,17 @@
         </div>
 
         <button class="btn btn-primary w-100" type="submit" disabled="@isSubmitting">
-            @(isSubmitting ? "Creating account..." : "Create account")
+            @(isSubmitting ? SubmittingButtonText : SubmitButtonText)
         </button>
     </EditForm>
 
-    <p class="auth-switch">
-        Already have an account?
-        <button class="link-button" @onclick="RequestLogin" type="button">Log in</button>
-    </p>
+    @if (ShowLoginSwitch)
+    {
+        <p class="auth-switch">
+            Already have an account?
+            <button class="link-button" @onclick="RequestLogin" type="button">Log in</button>
+        </p>
+    }
 </Modal>
 
 @code {
@@ -59,6 +67,11 @@
     [Parameter] public EventCallback OnClose { get; set; }
     [Parameter] public EventCallback OnRegistrationSuccess { get; set; }
     [Parameter] public EventCallback OnSwitchToLogin { get; set; }
+    [Parameter] public string Title { get; set; } = "Create your account";
+    [Parameter] public string SubmitButtonText { get; set; } = "Create account";
+    [Parameter] public string SubmittingButtonText { get; set; } = "Creating account...";
+    [Parameter] public bool ShowLoginSwitch { get; set; } = true;
+    [Parameter] public bool UseAdminCreationFlow { get; set; }
 
     private readonly RegisterModel registerModel = new();
     private string? errorMessage;
@@ -76,16 +89,14 @@
 
         try
         {
-            var dto = new AuthRegisterDto(
-                registerModel.Username,
-                registerModel.Name,
-                registerModel.Email,
-                registerModel.Password);
-
-            var response = await AuthApi.RegisterAsync(dto);
-            await AuthState.SetAuthAsync(response);
-            await OnRegistrationSuccess.InvokeAsync();
-            await CloseAsync();
+            if (UseAdminCreationFlow)
+            {
+                await SubmitAdminCreationAsync();
+            }
+            else
+            {
+                await SubmitStandardRegistrationAsync();
+            }
         }
         catch (ApiException ex)
         {
@@ -99,6 +110,54 @@
         {
             isSubmitting = false;
         }
+    }
+
+    private async Task SubmitStandardRegistrationAsync()
+    {
+        var dto = new AuthRegisterDto(
+            registerModel.Username,
+            registerModel.Name,
+            registerModel.Email,
+            registerModel.Password);
+
+        var response = await AuthApi.RegisterAsync(dto);
+        await AuthState.SetAuthAsync(response);
+        await OnRegistrationSuccess.InvokeAsync();
+        await CloseAsync();
+    }
+
+    private async Task SubmitAdminCreationAsync()
+    {
+        if (AuthState.CurrentUser?.Role != UserRole.Admin)
+        {
+            throw new ApiException(HttpStatusCode.Forbidden, "Only admins can create admin users.");
+        }
+
+        if (!await AuthState.ApplyAuthorizationAsync(HttpClient))
+        {
+            throw new ApiException(HttpStatusCode.Unauthorized, "You must be logged in to perform this action.");
+        }
+
+        var payload = new UserCreateAdminDto(
+            registerModel.Username,
+            registerModel.Name,
+            registerModel.Email,
+            registerModel.Password,
+            UserRole.Admin);
+
+        var response = await HttpClient.PostAsJsonAsync(
+            Navigation.ToAbsoluteUri("api/users"),
+            payload);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var content = await response.Content.ReadAsStringAsync();
+            var message = TryExtractMessage(content) ?? "Unable to create admin account.";
+            throw new ApiException(response.StatusCode, message, content);
+        }
+
+        await OnRegistrationSuccess.InvokeAsync();
+        await CloseAsync();
     }
 
     private async Task HandleDecline()
@@ -148,5 +207,41 @@
             Password = string.Empty;
             ConfirmPassword = string.Empty;
         }
+    }
+
+    private static string? TryExtractMessage(string? rawContent)
+    {
+        if (string.IsNullOrWhiteSpace(rawContent))
+        {
+            return null;
+        }
+
+        try
+        {
+            using var doc = JsonDocument.Parse(rawContent);
+            if (doc.RootElement.ValueKind == JsonValueKind.Object)
+            {
+                if (doc.RootElement.TryGetProperty("message", out var messageProp))
+                {
+                    return messageProp.GetString();
+                }
+
+                if (doc.RootElement.TryGetProperty("title", out var titleProp))
+                {
+                    return titleProp.GetString();
+                }
+
+                if (doc.RootElement.TryGetProperty("error", out var errorProp))
+                {
+                    return errorProp.GetString();
+                }
+            }
+        }
+        catch
+        {
+            // Ignore parse errors and fall back to default messaging.
+        }
+
+        return null;
     }
 }

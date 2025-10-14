@@ -45,7 +45,7 @@ public class AuthService : IAuthService
         }
     }
 
-    public async Task<AuthResult> Register(string username, string name, string email, string password)
+    public async Task<AuthResult> Register(string username, string name, string email, string password, UserRole role = UserRole.User)
     {
         var normalizedUsername = Normalize(username);
         var normalizedName = Normalize(name);
@@ -61,12 +61,15 @@ public class AuthService : IAuthService
         if (string.IsNullOrWhiteSpace(normalizedPassword))
             throw new ValidationException("Password is required.");
 
+        if (!Enum.IsDefined(typeof(UserRole), role))
+            throw new ValidationException("Invalid role specified.");
+
         var user = new User
         {
             Username = normalizedUsername,
             Name = normalizedName,
             Email = normalizedEmail,
-            Role = UserRole.User
+            Role = role
         };
 
         user.PasswordHash = _passwordHasher.HashPassword(user, normalizedPassword);

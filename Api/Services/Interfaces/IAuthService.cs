@@ -8,7 +8,7 @@ namespace cse325_team7_project.Api.Services.Interfaces;
 /// </summary>
 public interface IAuthService
 {
-    Task<AuthResult> Register(string username, string name, string email, string password);
+    Task<AuthResult> Register(string username, string name, string email, string password, UserRole role = UserRole.User);
 
     Task<AuthResult> Login(string usernameOrEmail, string password);
 

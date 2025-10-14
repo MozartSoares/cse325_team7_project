@@ -16,7 +16,7 @@ WORKDIR /app
 COPY --from=build /app/out .
 
 ENV ASPNETCORE_ENVIRONMENT=Production
-EXPOSE 8080
+EXPOSE 10000
 
-# Respect the PORT value provided by Render (default to 8080 when running locally)
-CMD ["bash", "-c", "dotnet cse325_team7_project.dll --urls http://0.0.0.0:${PORT:-8080}"]
+# Respect the PORT value provided by Render (default to 10000 when running locally)
+CMD ["bash", "-c", "dotnet cse325_team7_project.dll --urls http://0.0.0.0:${PORT:-10000}"]

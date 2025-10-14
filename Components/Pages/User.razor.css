@@ -75,6 +75,19 @@
   align-items: center;
 }
 
+.admin-actions {
+  margin: 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+.admin-actions .success-message {
+  color: #27ae60;
+  font-size: 0.9rem;
+}
+
 .edit-button,
 .delete-button {
   padding: 10px 25px;

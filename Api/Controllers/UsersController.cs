@@ -29,7 +29,7 @@ public class UsersController(IUserService service, IAuthService auth) : Controll
     [Authorize(Policy = "AdminOnly")]
     public async Task<ActionResult<UserResponseDto>> Create([FromBody] UserCreateAdminDto dto)
     {
-        var result = await _auth.Register(dto.Username, dto.Name, dto.Email, dto.Password);
+        var result = await _auth.Register(dto.Username, dto.Name, dto.Email, dto.Password, dto.Role);
         var created = result.User;
         return CreatedAtAction(nameof(GetById), new { id = created.Id.ToString() }, created.ToDto());
     }

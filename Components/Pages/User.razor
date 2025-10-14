@@ -61,6 +61,17 @@
             }
         </div>
 
+        @if (IsAdmin)
+        {
+            <div class="admin-actions">
+                <button class="edit-button" @onclick="ShowAdminRegisterModal">Create Admin User</button>
+                @if (!string.IsNullOrWhiteSpace(adminRegistrationSuccessMessage))
+                {
+                    <span class="success-message">@adminRegistrationSuccessMessage</span>
+                }
+            </div>
+        }
+
         <!-- Section for displaying the user's movie lists -->
         <div class="list-header-container">
             <h2>Lists</h2>
@@ -132,6 +143,15 @@
                 </EditForm>
             </Modal>
         }
+
+        <RegisterModal Show="@adminRegisterModalVisible"
+                       OnClose="CloseAdminRegisterModal"
+                       OnRegistrationSuccess="HandleAdminRegistrationSuccess"
+                       Title="Create admin account"
+                       SubmitButtonText="Create admin"
+                       SubmittingButtonText="Creating admin..."
+                       ShowLoginSwitch="false"
+                       UseAdminCreationFlow="true" />
     }
 </div>
 
@@ -152,9 +172,11 @@
     private UserUpdateDto? userUpdateDto;
 
     private EditContext? editContext;
-   private bool isChanged = true;
+    private bool isChanged = true;
 
     private MoviesListCreateDto newMovieList = new();
+    private bool adminRegisterModalVisible;
+    private string? adminRegistrationSuccessMessage;
 
     private bool IsAdmin => AuthState.CurrentUser?.Role == UserRole.Admin;
     private bool IsSelf => AuthState.CurrentUser?.Id == userData?.Id;
@@ -388,8 +410,30 @@
         }
     }
 
+    private void ShowAdminRegisterModal()
+    {
+        adminRegistrationSuccessMessage = null;
+        adminRegisterModalVisible = true;
+    }
+
+    private void CloseAdminRegisterModal()
+    {
+        adminRegisterModalVisible = false;
+    }
+
+    private async Task HandleAdminRegistrationSuccess()
+    {
+        adminRegistrationSuccessMessage = "Admin account created successfully.";
+        await InvokeAsync(StateHasChanged);
+    }
+
     private void HandleAuthStateChanged()
     {
+        if (!IsAdmin)
+        {
+            adminRegisterModalVisible = false;
+            adminRegistrationSuccessMessage = null;
+        }
         _ = InvokeAsync(StateHasChanged);
     }
 
