@@ -1,6 +1,15 @@
 ﻿@page "/"
 @rendermode InteractiveServer
+@using System.ComponentModel.DataAnnotations
+@using System.Text.Json
+@using System.Linq
+@using cse325_team7_project.Api.DTOs
+@using cse325_team7_project.Domain.Enums
 @inject AuthDialogService AuthDialogs
+@inject AuthStateService AuthState
+@inject HttpClient Http
+@inject NavigationManager Nav
+@implements IDisposable
 
 <PageTitle>MovieHub7</PageTitle>
 
@@ -19,13 +28,318 @@
     </div>
 </div>
 
+@if (IsAdmin)
+{
+    <div class="admin-controls">
+        <button class="admin-add-movie-btn" type="button" @onclick="ShowAddMovieModal">Add New Movie</button>
+    </div>
+}
+
 <Movies />
+
+@if (IsAdmin)
+{
+    <Modal Title="Add New Movie" Show="@addMovieModalVisible" OnDecline="CloseAddMovieModal">
+        <EditForm Model="@newMovie" OnValidSubmit="HandleAddMovieSubmit">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            @if (!string.IsNullOrWhiteSpace(addMovieErrorMessage))
+            {
+                <div class="modal-error">@addMovieErrorMessage</div>
+            }
+
+            <div class="form-group">
+                <label>Title</label>
+                <InputText class="form-control" @bind-Value="newMovie.Title" />
+                <ValidationMessage For="@(() => newMovie.Title)" />
+            </div>
+
+            <div class="form-group">
+                <label>Release Date</label>
+                <InputDate class="form-control" @bind-Value="newMovie.ReleaseDate" />
+                <ValidationMessage For="@(() => newMovie.ReleaseDate)" />
+            </div>
+
+            <div class="form-group">
+                <label>Genre</label>
+                <select class="form-control" @bind="newMovie.Genre">
+                    @foreach (var genre in Enum.GetValues<Genre>())
+                    {
+                        <option value="@genre">@genre</option>
+                    }
+                </select>
+                <ValidationMessage For="@(() => newMovie.Genre)" />
+            </div>
+
+            <div class="form-group">
+                <label>Description</label>
+                <InputTextArea class="form-control" @bind-Value="newMovie.Description" />
+                <ValidationMessage For="@(() => newMovie.Description)" />
+            </div>
+
+            <div class="form-group">
+                <label>Studio</label>
+                <InputText class="form-control" @bind-Value="newMovie.Studio" />
+                <ValidationMessage For="@(() => newMovie.Studio)" />
+            </div>
+
+            <div class="form-group">
+                <label>Cast Members</label>
+                @if (newMovie.Cast.Count == 0)
+                {
+                    <p class="muted-text">No cast members added yet.</p>
+                }
+                @for (var i = 0; i < newMovie.Cast.Count; i++)
+                {
+                    var index = i;
+                    <div class="cast-entry">
+                        <InputText class="form-control" @bind-Value="newMovie.Cast[index].Name" placeholder="Name" />
+                        <select class="form-control" @bind="newMovie.Cast[index].Role">
+                            @foreach (var role in Enum.GetValues<CastRole>())
+                            {
+                                <option value="@role">@role</option>
+                            }
+                        </select>
+                        <button type="button" class="remove-cast-btn" @onclick="() => RemoveCastMember(index)">Remove</button>
+                    </div>
+                    <ValidationMessage For="@(() => newMovie.Cast[index].Name)" />
+                }
+                <button type="button" class="btn btn-secondary" @onclick="AddCastMember">Add Cast Member</button>
+            </div>
+
+            <div class="form-group">
+                <label>Image URL</label>
+                <InputText class="form-control" @bind-Value="newMovie.Image" />
+                <ValidationMessage For="@(() => newMovie.Image)" />
+            </div>
+
+            <div class="form-group">
+                <label>Thumbnail Image URL</label>
+                <InputText class="form-control" @bind-Value="newMovie.ThumbnailImage" />
+                <ValidationMessage For="@(() => newMovie.ThumbnailImage)" />
+            </div>
+
+            <div class="form-group">
+                <label>Budget</label>
+                <InputNumber class="form-control" @bind-Value="newMovie.Budget" />
+                <ValidationMessage For="@(() => newMovie.Budget)" />
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100" disabled="@isSubmitting">
+                @(isSubmitting ? "Creating..." : "Create Movie")
+            </button>
+        </EditForm>
+    </Modal>
+}
 
 
 @code 
 {
+    private bool addMovieModalVisible;
+    private bool isSubmitting;
+    private string? addMovieErrorMessage;
+    private MovieCreateFormModel newMovie = new();
+
+    private bool IsAdmin => AuthState.CurrentUser?.Role == UserRole.Admin;
+
+    protected override void OnInitialized()
+    {
+        AuthState.AuthStateChanged += HandleAuthStateChanged;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await AuthState.EnsureInitializedAsync();
+    }
+
+    private void HandleAuthStateChanged()
+    {
+        if (!IsAdmin)
+        {
+            addMovieModalVisible = false;
+        }
+
+        _ = InvokeAsync(StateHasChanged);
+    }
+
     private void NavigateToSignUp()
     {
         AuthDialogs.ShowRegistration();
+    }
+
+    private void ShowAddMovieModal()
+    {
+        if (!IsAdmin)
+        {
+            return;
+        }
+
+        addMovieErrorMessage = null;
+        addMovieModalVisible = true;
+    }
+
+    private void CloseAddMovieModal()
+    {
+        addMovieModalVisible = false;
+        addMovieErrorMessage = null;
+        ResetAddMovieForm();
+    }
+
+    private async Task HandleAddMovieSubmit()
+    {
+        if (isSubmitting)
+        {
+            return;
+        }
+
+        if (!IsAdmin)
+        {
+            addMovieErrorMessage = "Only admins can create movies.";
+            return;
+        }
+
+        addMovieErrorMessage = null;
+        isSubmitting = true;
+
+        try
+        {
+            if (!await AuthState.ApplyAuthorizationAsync(Http))
+            {
+                addMovieErrorMessage = "Authentication required.";
+                return;
+            }
+
+            var dto = new MovieCreateDto(
+                newMovie.Title,
+                newMovie.ReleaseDate,
+                newMovie.Genre,
+                newMovie.Description,
+                newMovie.Studio,
+                newMovie.Cast.Select(c => new CastMemberDto { Name = c.Name, Role = c.Role }).ToList(),
+                newMovie.Image,
+                newMovie.ThumbnailImage,
+                newMovie.Budget
+            );
+
+            var response = await Http.PostAsJsonAsync(Nav.ToAbsoluteUri("api/movies"), dto);
+            if (response.IsSuccessStatusCode)
+            {
+                CloseAddMovieModal();
+                Nav.NavigateTo(Nav.Uri, forceLoad: true);
+            }
+            else
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                addMovieErrorMessage = TryExtractMessage(content) ?? "Unable to create movie.";
+            }
+        }
+        catch (Exception ex)
+        {
+            addMovieErrorMessage = $"Unexpected error: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private void ResetAddMovieForm()
+    {
+        newMovie = new MovieCreateFormModel();
+    }
+
+    private void AddCastMember()
+    {
+        newMovie.Cast.Add(new CastMemberInput());
+    }
+
+    private void RemoveCastMember(int index)
+    {
+        if (index < 0 || index >= newMovie.Cast.Count)
+        {
+            return;
+        }
+
+        newMovie.Cast.RemoveAt(index);
+    }
+
+    private static string? TryExtractMessage(string? rawContent)
+    {
+        if (string.IsNullOrWhiteSpace(rawContent))
+        {
+            return null;
+        }
+
+        try
+        {
+            using var doc = JsonDocument.Parse(rawContent);
+            if (doc.RootElement.ValueKind == JsonValueKind.Object)
+            {
+                if (doc.RootElement.TryGetProperty("message", out var messageProp))
+                {
+                    return messageProp.GetString();
+                }
+
+                if (doc.RootElement.TryGetProperty("title", out var titleProp))
+                {
+                    return titleProp.GetString();
+                }
+
+                if (doc.RootElement.TryGetProperty("error", out var errorProp))
+                {
+                    return errorProp.GetString();
+                }
+            }
+        }
+        catch
+        {
+            // Ignore parse errors.
+        }
+
+        return null;
+    }
+
+    public void Dispose()
+    {
+        AuthState.AuthStateChanged -= HandleAuthStateChanged;
+    }
+
+    private class MovieCreateFormModel
+    {
+        [Required, StringLength(100)]
+        public string Title { get; set; } = string.Empty;
+
+        [Required]
+        public DateOnly ReleaseDate { get; set; } = DateOnly.FromDateTime(DateTime.Today);
+
+        [Required]
+        public Genre Genre { get; set; } = Genre.Action;
+
+        [Required, StringLength(500)]
+        public string Description { get; set; } = string.Empty;
+
+        [Required, StringLength(100)]
+        public string Studio { get; set; } = string.Empty;
+
+        public List<CastMemberInput> Cast { get; set; } = new();
+
+        [Url]
+        public string Image { get; set; } = string.Empty;
+
+        [Url]
+        public string ThumbnailImage { get; set; } = string.Empty;
+
+        [Range(0, double.MaxValue)]
+        public decimal Budget { get; set; }
+    }
+
+    private class CastMemberInput
+    {
+        [Required, StringLength(100)]
+        public string Name { get; set; } = string.Empty;
+
+        [Required]
+        public CastRole Role { get; set; } = CastRole.Actor;
     }
 }

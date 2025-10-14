@@ -81,6 +81,70 @@
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
 
+.admin-controls {
+    max-width: 1200px;
+    margin: 0 auto 30px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.admin-add-movie-btn {
+    padding: 12px 32px;
+    background-color: #2ecc71;
+    color: #ffffff;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+}
+
+.admin-add-movie-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(46, 204, 113, 0.4);
+}
+
+.modal-error {
+    padding: 10px 14px;
+    margin-bottom: 16px;
+    border-radius: 6px;
+    background-color: #fdecea;
+    color: #b71c1c;
+}
+
+.cast-entry {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    align-items: center;
+}
+
+.cast-entry .form-control {
+    flex: 1;
+}
+
+.remove-cast-btn {
+    background-color: #e74c3c;
+    color: #ffffff;
+    border: none;
+    border-radius: 4px;
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.remove-cast-btn:hover {
+    background-color: #c0392b;
+}
+
+.muted-text {
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
 /* Tablet Styles */
 @media (max-width: 1024px) {
     .hero-section {
@@ -140,6 +204,15 @@
     }
 
     .hero-signup-btn {
+        width: 100%;
+        max-width: 300px;
+    }
+
+    .admin-controls {
+        justify-content: center;
+    }
+
+    .admin-add-movie-btn {
         width: 100%;
         max-width: 300px;
     }
