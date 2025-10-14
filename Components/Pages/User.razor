@@ -1,12 +1,13 @@
 @page "/user/{id?}"
+@rendermode InteractiveServer
 @using cse325_team7_project.Api.DTOs
 @using cse325_team7_project.Domain.Enums
 @inject HttpClient HttpClient
+@inject NavigationManager Nav
 
 <div class="user-detail-container">
     <h1>Profile Details</h1>
 
-    
     @*
         Displays a loading message if user data is not yet loaded.
         Otherwise, renders the user's profile details.
@@ -50,15 +51,18 @@
 
             <!-- Action buttons for editing and deleting the profile -->
             <div class="action-buttons">
-                <button class="edit-button">Edit</button>
-                <button class="delete-button">Delete</button>
+                <button class="edit-button" @onclick="ShowUserModal">Edit</button>
+                <button class="delete-button" @onclick="ShowDeleteModal">Delete</button>
             </div>
         </div>
 
         <!-- Section for displaying the user's movie lists -->
-        <h2>Lists</h2>
-        
-        
+        <div class="list-header-container">
+            <h2>Lists</h2>
+            <button class="edit-button" @onclick="ShowAddModal">Add List</button>
+        </div>
+
+
         @*
             Checks if the user has any lists.
             If yes, renders a MovieListCollection component for each list.
@@ -67,7 +71,7 @@
         @if (userData.Lists != null && userData.Lists.Any())
         {
             foreach (var list in userData.Lists)
-            {   
+            {
                 <MovieListCollection movieListId=@list />
             }
         }
@@ -75,6 +79,45 @@
         {
             <p>No lists available for this user.</p>
         }
+
+        <Modal Title="Edit Profile" Show="@userModalVisible" OnDecline="CloseUserModal">
+            @if (userUpdateDto != null)
+            {
+                <EditForm EditContext="@editContext" OnValidSubmit="HandleUserEditSubmit">
+                    <DataAnnotationsValidator />
+
+                    <div class="form-group">
+                        <label>Name</label>
+                        <InputText @bind-Value="userUpdateDto.Name" class="form-control" />
+                        <ValidationMessage For="@(() => userUpdateDto.Name)" />
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <InputText @bind-Value="userUpdateDto.Email" class="form-control" />
+                        <ValidationMessage For="@(() => userUpdateDto.Email)" />
+                    </div>
+                    <button type="submit" class="btn btn-primary" disabled="@isChanged">Save</button>
+                </EditForm>
+            }
+        </Modal>
+
+        <Modal Title="Confirm" AcceptText="Confirm" Show="@deleteModalVisible" OnDecline="CloseDeleteModal"
+            OnAccept="HandleDeleteSubmit">
+            <p>Do you want to delete your account?</p>
+        </Modal>
+
+        <Modal Title="Add List" Show="@addListModalVisible" OnDecline="CloseAddModal">
+            <EditForm Model="@newMovieList" OnValidSubmit="HandleAddListSubmit">
+                <DataAnnotationsValidator />
+
+                <div class="form-group">
+                    <label>Title</label>
+                    <InputText @bind-Value="newMovieList.Title" class="form-control" />
+                    <ValidationMessage For="@(() => newMovieList.Title)" />
+                </div>
+                <button type="submit" class="btn btn-primary">Create</button>
+            </EditForm>
+        </Modal>
     }
 </div>
 
@@ -92,6 +135,12 @@
     /// Stores the user data fetched from the API.
     /// </summary>
     private UserResponseDto? userData;
+    private UserUpdateDto? userUpdateDto;
+
+    private EditContext? editContext;
+    private bool isChanged = true;
+
+    private MoviesListCreateDto newMovieList = new();
 
     /// <summary>
     /// Fetches user data from the API when the component initializes.
@@ -100,15 +149,21 @@
     protected override async Task OnInitializedAsync()
     {
         try
-        {   
+        {
             // Fetch user data from the API using the provided ID
-            userData = await HttpClient.GetFromJsonAsync<UserResponseDto>($"api/user/{id}");
+            userData = await HttpClient.GetFromJsonAsync<UserResponseDto>(Nav.ToAbsoluteUri($"api/user/{id})"));
         }
         catch (Exception ex)
-        {   
+        {
             // Log the error and use placeholder data if the API call fails
             Console.WriteLine($"Error loading user from API: {ex.Message}");
             userData = GetPlaceholderUser();
+        }
+        if (userData != null)
+        {
+            userUpdateDto = new UserUpdateDto { Name = userData.Name, Email = userData.Email };
+            editContext = new EditContext(userUpdateDto);
+            editContext.OnFieldChanged += (sender, eventArgs) => isChanged = false;
         }
     }
 
@@ -129,5 +184,95 @@
     private string GetInitial(string username)
     {
         return string.IsNullOrWhiteSpace(username) ? string.Empty : username[0].ToString().ToUpper();
+    }
+
+    @* User Edit Form *@
+    private bool userModalVisible = false;
+    private void ShowUserModal() => userModalVisible = true;
+    private void CloseUserModal() => userModalVisible = false;
+
+    private async Task HandleUserEditSubmit()
+    {
+        try
+        {
+            Console.WriteLine($"Updating user {userData?.Name}");
+            var response = await HttpClient.PutAsJsonAsync(Nav.ToAbsoluteUri($"api/user/{userData?.Id}"), userUpdateDto);
+
+            if (response.IsSuccessStatusCode)
+            {
+                userData = await response.Content.ReadFromJsonAsync<UserResponseDto>();
+                CloseUserModal();
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Error updating user: {error}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+    }
+
+    @* User Delete Confirm *@
+    private bool deleteModalVisible = false;
+    private void ShowDeleteModal() => deleteModalVisible = true;
+    private void CloseDeleteModal() => deleteModalVisible = false;
+
+    private async Task HandleDeleteSubmit()
+    {
+        try
+        {
+            Console.WriteLine($"Deleting user {userData?.Name}");
+            var response = await HttpClient.DeleteAsync(Nav.ToAbsoluteUri($"api/user/{userData?.Id}"));
+
+            if (response.IsSuccessStatusCode)
+            {
+                Nav.NavigateTo("/");
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Error deleting user: {error}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
+            CloseDeleteModal();
+        }
+    }
+
+
+    @* Add List Form *@
+    private bool addListModalVisible = false;
+    private void ShowAddModal() => addListModalVisible = true;
+    private void CloseAddModal() => addListModalVisible = false;
+
+    private async Task HandleAddListSubmit()
+    {
+        try
+        {
+            Console.WriteLine($"Adding list {newMovieList.Title}");
+            var response = await HttpClient.PostAsJsonAsync(Nav.ToAbsoluteUri("api/lists/"), newMovieList);
+
+            if (response.IsSuccessStatusCode)
+            {
+                CloseAddModal();
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Error adding list: {error}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
     }
 }

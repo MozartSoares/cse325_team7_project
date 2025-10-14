@@ -37,3 +37,34 @@
 .movie-details-info ul {
   padding-left: 1.2rem;
 }
+
+.detail-action-buttons {
+    display: flex;
+    justify-content: space-around;
+    column-gap: 0.5rem;
+}
+
+.detail-blue-button,
+.detail-red-button {
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    cursor: pointer;
+}
+
+.detail-blue-button {
+  background-color: #3498db;
+}
+
+.detail-blue-button:hover {
+  background-color: #2980b9;
+}
+
+.detail-red-button {
+  background-color: #e74c3c;
+}
+
+.detail-red-button:hover {
+  background-color: #c0392b;
+}

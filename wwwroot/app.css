@@ -149,6 +149,13 @@ body.dark-mode .movie-title {
     color: #ffffff;
 }
 
+.form-group {
+    margin-bottom: 1rem; 
+}
+
+.form-group label {
+    font-weight: bold; 
+}
 body.dark-mode .movie-description {
     color: #b0b0b0;
 }

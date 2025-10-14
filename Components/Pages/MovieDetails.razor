@@ -1,5 +1,8 @@
 @page "/movies/{Id}"
-@using cse325_team7_project.Api.DTOs
+@rendermode InteractiveServer
+@using cse325_team7_project.Api.DTOs;
+@using cse325_team7_project.Domain.Enums;
+@using cse325_team7_project.Domain.ValueObjects;
 @inject HttpClient Http
 @inject NavigationManager Nav
 
@@ -35,8 +38,139 @@
                         }
                     </ul>
                 }
+                <div class="detail-action-buttons">
+                    <button class="detail-blue-button" @onclick="ShowAddModal">Add to list</button>
+                    <button class="detail-blue-button" @onclick="ShowEditModal">Edit</button>
+                    <button class="detail-red-button" @onclick="ShowDeleteModal">Delete</button>
+                </div>
             </div>
         </div>
+
+        <Modal Title="Add to List" Show="@addListModalVisible" OnDecline="CloseAddModal">
+            @if (movieLists != null && movieLists.Any())
+            {
+                <EditForm Model="@this" OnValidSubmit="HandleAddToListSubmit">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+
+                    <div class="form-group">
+                        <label for="movieListSelector">Select a List</label>
+                        <select id="movieListSelector" @bind="@selectedListId" class="form-control" required>
+                            <option value="">-- Select a List --</option>
+                            @foreach (var movieList in movieLists)
+                            {
+                                <option value="@movieList.Id">@movieList.Title</option>
+                            }
+                        </select>
+                        <ValidationMessage For="@(() => selectedListId)" />
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Confirm</button>
+                </EditForm>
+            }
+            else
+            {
+                <p>Loading lists...</p>
+            }
+        </Modal>
+
+        <Modal Title="Edit Details" Show="@editModalVisible" OnDecline="CloseEditModal">
+            @if (movieUpdateDto != null)
+            {
+            <EditForm EditContext="@editContext" OnValidSubmit="HandleMovieEditSubmit">
+                <DataAnnotationsValidator />
+
+                <div class="form-group">
+                    <label>Title</label>
+                    <InputText @bind-Value="movieUpdateDto.Title" class="form-control" />
+                    <ValidationMessage For="@(() => movieUpdateDto.Title)" />
+                </div>
+
+                <div class="form-group">
+                    <label>Release Date</label>
+                    <InputDate @bind-Value="movieUpdateDto.ReleaseDate" class="form-control" />
+                    <ValidationMessage For="@(() => movieUpdateDto.ReleaseDate)" />
+                </div>
+
+                <div class="form-group">
+                    <label>Genre</label>
+                    <select @bind="movieUpdateDto.Genre" class="form-control">
+                        @foreach (var genre in Enum.GetValues(typeof(Genre)).Cast<Genre>())
+                        {
+                            <option value="@genre">@genre</option>
+                        }
+                    </select>
+                    <ValidationMessage For="@(() => movieUpdateDto.Genre)" />
+                </div>
+
+                <div class="form-group">
+                    <label>Description</label>
+                    <InputTextArea @bind-Value="movieUpdateDto.Description" class="form-control" />
+                    <ValidationMessage For="@(() => movieUpdateDto.Description)" />
+                </div>
+
+                <div class="form-group">
+                    <label>Studio</label>
+                    <InputText @bind-Value="movieUpdateDto.Studio" class="form-control" />
+                    <ValidationMessage For="@(() => movieUpdateDto.Studio)" />
+                </div>
+                
+                @* It almost works, but throws Index errors I couldn't fix *@
+
+                @* <div class="form-group">
+                    <label>Cast Members</label>
+    
+                    @if (movieUpdateDto.Cast != null && movieUpdateDto.Cast.Count > 0)
+                    {
+
+                        for (int i = 0; i < movieUpdateDto.Cast.Count; i++)
+                        {
+                            <div class="d-flex align-items-center mb-2">
+                                <InputText @bind-Value="movieUpdateDto.Cast[i].Name" class="form-control me-2" placeholder="Cast Member Name" />
+                                
+                                <select @bind="movieUpdateDto.Cast[i].Role" class="form-control">
+                                    @foreach (var role in Enum.GetValues(typeof(CastRole)).Cast<CastRole>())
+                                    {
+                                        <option value="@role">@role</option>
+                                    }
+                                </select>
+
+                                <button type="button" class="btn btn-danger ms-2" @onclick="() => RemoveCastMember(i)">X</button>
+                            </div>
+                            <ValidationMessage For="@(() => movieUpdateDto.Cast[i])" />
+                        }
+                    }
+                
+                    <button type="button" class="btn btn-secondary" @onclick="AddCastMember">Add Cast Member</button>
+                </div> *@
+
+                <div class="form-group">
+                    <label>Image URL</label>
+                    <InputText @bind-Value="movieUpdateDto.Image" class="form-control" />
+                    <ValidationMessage For="@(() => movieUpdateDto.Image)" />
+                </div>
+
+                <div class="form-group">
+                    <label>Thumbnail Image URL</label>
+                    <InputText @bind-Value="movieUpdateDto.ThumbnailImage" class="form-control" />
+                    <ValidationMessage For="@(() => movieUpdateDto.ThumbnailImage)" />
+                </div>
+
+                <div class="form-group">
+                    <label>Budget</label>
+                    <InputNumber @bind-Value="movieUpdateDto.Budget" class="form-control" />
+                    <ValidationMessage For="@(() => movieUpdateDto.Budget)" />
+                </div>
+
+                <button type="submit" class="btn btn-primary" disabled="@isChanged">Save</button>
+            </EditForm>
+            }
+        </Modal>
+
+        <Modal Title="Delete" AcceptText="Confirm" Show="@deleteModalVisible" OnDecline="CloseDeleteModal"
+            OnAccept="HandleDeleteSubmit">
+            <p>Do you want to delete movie "@Movie.Title"?</p>
+        </Modal>
     }
 </div>
 
@@ -45,8 +179,17 @@
     public string Id { get; set; } = string.Empty;
 
     private MovieResponseDto? Movie;
+    
     private bool isUsingPlaceholderData = false;
     private bool loadAttempted = false;
+
+    private MovieUpdateDto? movieUpdateDto;
+
+    private EditContext? editContext;
+    private bool isChanged = true;
+    private List<MoviesListResponseDto>? movieLists = new();
+    private string selectedListId = string.Empty;
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -67,96 +210,178 @@
             if (Movie != null)
             {
                 isUsingPlaceholderData = true;
+                
             }
+        }
+        if (Movie != null ) {
+            movieUpdateDto = new MovieUpdateDto {
+                Title = Movie.Title,
+                ReleaseDate = Movie.ReleaseDate,
+                Genre = Movie.Genre,
+                Description = Movie.Description,
+                Studio = Movie.Studio,
+                Cast = Movie.Cast.Select(c => new CastMemberDto{ Name = c.Name, Role = c.Role }).ToList(),
+                Image = Movie.Image,
+                ThumbnailImage = Movie.ThumbnailImage,
+                Budget = Movie.Budget
+            };
+            editContext = new EditContext(movieUpdateDto);
+            editContext.OnFieldChanged += (sender, eventArgs) => isChanged = false;
         }
 
         loadAttempted = true;
     }
 
-    private List<MovieResponseDto> GetPlaceholderMovies()
+    private List<MovieResponseDto> GetPlaceholderMovies() => MockData.GetPlaceholderMovies2(); 
+
+    private List<MoviesListResponseDto> GetPlaceholderLists() => MockData.GetPlaceholderLists();
+
+    @* Add movie to List Form *@
+    private bool addListModalVisible = false;
+    private async Task ShowAddModal()
     {
-        return new List<MovieResponseDto>
+        addListModalVisible = true;
+        try
         {
-            new MovieResponseDto(
-                "1", "The Matrix", new DateOnly(1999, 3, 31), Domain.Enums.Genre.ScienceFiction,
-                "A computer programmer discovers reality is a simulation and joins a rebellion against machines.",
-                "Warner Bros", new List<cse325_team7_project.Domain.ValueObjects.CastMember>(),
-                "https://via.placeholder.com/400x600/0066cc/ffffff?text=The+Matrix",
-                "https://via.placeholder.com/200x300/0066cc/ffffff?text=Matrix",
-                63000000m, DateTime.UtcNow.AddDays(-30), DateTime.UtcNow.AddDays(-30)
-            ),
-            new MovieResponseDto(
-                "2", "Inception", new DateOnly(2010, 7, 16), Domain.Enums.Genre.ScienceFiction,
-                "A thief who steals corporate secrets through dream-sharing technology is given the inverse task of planting an idea.",
-                "Warner Bros", new List<cse325_team7_project.Domain.ValueObjects.CastMember>(),
-                "https://via.placeholder.com/400x600/cc6600/ffffff?text=Inception",
-                "https://via.placeholder.com/200x300/cc6600/ffffff?text=Inception",
-                160000000m, DateTime.UtcNow.AddDays(-25), DateTime.UtcNow.AddDays(-25)
-            ),
-            new MovieResponseDto(
-                "3", "The Dark Knight", new DateOnly(2008, 7, 18), Domain.Enums.Genre.Action,
-                "Batman faces the Joker, a criminal mastermind who wants to plunge Gotham City into anarchy.",
-                "Warner Bros", new List<cse325_team7_project.Domain.ValueObjects.CastMember>(),
-                "https://via.placeholder.com/400x600/333333/ffffff?text=Dark+Knight",
-                "https://via.placeholder.com/200x300/333333/ffffff?text=Batman",
-                185000000m, DateTime.UtcNow.AddDays(-20), DateTime.UtcNow.AddDays(-20)
-            ),
-            new MovieResponseDto(
-                "4", "Pulp Fiction", new DateOnly(1994, 10, 14), Domain.Enums.Genre.Crime,
-                "The lives of two mob hitmen, a boxer, and others intertwine in four tales of violence and redemption.",
-                "Miramax", new List<cse325_team7_project.Domain.ValueObjects.CastMember>(),
-                "https://via.placeholder.com/400x600/990000/ffffff?text=Pulp+Fiction",
-                "https://via.placeholder.com/200x300/990000/ffffff?text=Pulp",
-                8500000m, DateTime.UtcNow.AddDays(-15), DateTime.UtcNow.AddDays(-15)
-            ),
-            new MovieResponseDto(
-                "5", "The Shawshank Redemption", new DateOnly(1994, 9, 23), Domain.Enums.Genre.Drama,
-                "Two imprisoned men bond over years, finding solace and eventual redemption through acts of common decency.",
-                "Columbia Pictures", new List<cse325_team7_project.Domain.ValueObjects.CastMember>(),
-                "https://via.placeholder.com/400x600/006600/ffffff?text=Shawshank",
-                "https://via.placeholder.com/200x300/006600/ffffff?text=Shawshank",
-                25000000m, DateTime.UtcNow.AddDays(-10), DateTime.UtcNow.AddDays(-10)
-            ),
-            new MovieResponseDto(
-                "6", "Forrest Gump", new DateOnly(1994, 7, 6), Domain.Enums.Genre.Drama,
-                "The presidencies of Kennedy and Johnson through the eyes of an Alabama man with an IQ of 75.",
-                "Paramount Pictures", new List<cse325_team7_project.Domain.ValueObjects.CastMember>(),
-                "https://via.placeholder.com/400x600/0099cc/ffffff?text=Forrest+Gump",
-                "https://via.placeholder.com/200x300/0099cc/ffffff?text=Forrest",
-                55000000m, DateTime.UtcNow.AddDays(-5), DateTime.UtcNow.AddDays(-5)
-            ),
-            new MovieResponseDto(
-                "7", "Avatar", new DateOnly(2009, 12, 18), Domain.Enums.Genre.ScienceFiction,
-                "A paraplegic Marine dispatched to the moon Pandora on a unique mission becomes torn between following orders and protecting an alien civilization.",
-                "20th Century Fox", new List<cse325_team7_project.Domain.ValueObjects.CastMember>(),
-                "https://via.placeholder.com/400x600/0066ff/ffffff?text=Avatar",
-                "https://via.placeholder.com/200x300/0066ff/ffffff?text=Avatar",
-                237000000m, DateTime.UtcNow.AddDays(-3), DateTime.UtcNow.AddDays(-3)
-            ),
-            new MovieResponseDto(
-                "8", "Titanic", new DateOnly(1997, 12, 19), Domain.Enums.Genre.Romance,
-                "A seventeen-year-old aristocrat falls in love with a kind but poor artist aboard the luxurious, ill-fated R.M.S. Titanic.",
-                "Paramount Pictures", new List<cse325_team7_project.Domain.ValueObjects.CastMember>(),
-                "https://via.placeholder.com/400x600/003366/ffffff?text=Titanic",
-                "https://via.placeholder.com/200x300/003366/ffffff?text=Titanic",
-                200000000m, DateTime.UtcNow.AddDays(-2), DateTime.UtcNow.AddDays(-2)
-            ),
-            new MovieResponseDto(
-                "9", "The Lion King", new DateOnly(1994, 6, 24), Domain.Enums.Genre.Animation,
-                "A young lion prince flees his kingdom only to learn the true meaning of responsibility and bravery.",
-                "Walt Disney Pictures", new List<cse325_team7_project.Domain.ValueObjects.CastMember>(),
-                "https://via.placeholder.com/400x600/ff9900/ffffff?text=Lion+King",
-                "https://via.placeholder.com/200x300/ff9900/ffffff?text=Lion",
-                45000000m, DateTime.UtcNow.AddDays(-1), DateTime.UtcNow.AddDays(-1)
-            ),
-            new MovieResponseDto(
-                "10", "Jurassic Park", new DateOnly(1993, 6, 11), Domain.Enums.Genre.Adventure,
-                "A pragmatic paleontologist visiting an almost complete theme park is tasked with protecting a couple of kids after a power failure causes the park's cloned dinosaurs to run loose.",
-                "Universal Pictures", new List<cse325_team7_project.Domain.ValueObjects.CastMember>(),
-                "https://via.placeholder.com/400x600/669900/ffffff?text=Jurassic+Park",
-                "https://via.placeholder.com/200x300/669900/ffffff?text=Jurassic",
-                63000000m, DateTime.UtcNow, DateTime.UtcNow
-            )
-        };
+            movieLists = await Http.GetFromJsonAsync<List<MoviesListResponseDto>>(Nav.ToAbsoluteUri("api/lists"));
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading movie lists: {ex.Message}");
+            movieLists = GetPlaceholderLists();
+        }
+    }
+    
+    private void CloseAddModal() => addListModalVisible = false;
+
+    private async Task HandleAddToListSubmit()
+    {
+        if (Movie == null || string.IsNullOrEmpty(selectedListId))
+        {
+            Console.WriteLine("No movie or list selected.");
+            CloseAddModal();
+            return;
+        }
+
+        try
+        {
+            // Find the selected list
+            var selectedList = movieLists?.FirstOrDefault(list => list.Id == selectedListId);
+            if (selectedList == null)
+            {
+                Console.WriteLine("Selected list not found.");
+                CloseAddModal();
+                return;
+            }
+
+            // Create an update DTO
+            var updateDto = new MoviesListUpdateDto
+            {
+                Title = selectedList.Title,
+                Movies = selectedList.Movies ?? new List<string>()
+            };
+
+            // Add the movie ID if it's not already in the list
+            if (!updateDto.Movies.Contains(Movie.Id))
+            {
+                updateDto.Movies.Add(Movie.Id);
+            }
+
+            // Send the update to the API
+            var response = await Http.PutAsJsonAsync(Nav.ToAbsoluteUri($"api/lists/{selectedListId}"), updateDto);
+
+            if (response.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"Added {Movie.Title} to list {selectedList.Title}");
+            }
+            else
+            {
+                Console.WriteLine($"Error: {await response.Content.ReadAsStringAsync()}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
+            CloseAddModal();
+        }
+    }
+
+    
+    @* Movie Edit Form *@
+    private bool editModalVisible = false;
+    private void ShowEditModal() => editModalVisible = true;
+    private void CloseEditModal() => editModalVisible = false;
+
+    private async Task HandleMovieEditSubmit()
+    {
+        try
+        {
+            Console.WriteLine($"Updating movie {Movie?.Title}");
+            var response = await Http.PutAsJsonAsync(Nav.ToAbsoluteUri($"api/movies/{Id}"), movieUpdateDto);
+
+            if (response.IsSuccessStatusCode)
+            {
+                Movie = await response.Content.ReadFromJsonAsync<MovieResponseDto>();
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Error updating movie: {error}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
+            CloseEditModal();
+        }
+    }
+
+
+    @* Movie Delete Confirm *@
+    private bool deleteModalVisible = false;
+    private void ShowDeleteModal() => deleteModalVisible = true;
+    private void CloseDeleteModal() => deleteModalVisible = false;
+
+    private async Task HandleDeleteSubmit()
+    {
+        try
+        {
+            Console.WriteLine($"Deleting movie {Movie?.Title}");
+            var response = await Http.DeleteAsync(Nav.ToAbsoluteUri($"api/movies/{Id}"));
+
+            if (response.IsSuccessStatusCode)
+            {
+                Nav.NavigateTo("/");
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Error deleting movie: {error}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
+            CloseDeleteModal();
+        }
+    }
+
+    private void AddCastMember()
+    {
+        movieUpdateDto?.Cast.Add(new CastMemberDto { Name = string.Empty, Role = CastRole.Actor});
+    }
+
+    private void RemoveCastMember(int index)
+    {
+        movieUpdateDto?.Cast.RemoveAt(index);
     }
 }

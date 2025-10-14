@@ -15,13 +15,35 @@
     border-bottom: 1px solid #ddd;
 }
 
-.movie-copy-button {
-    background-color: #007bff;
+.list-action-buttons {
+    display: flex;
+    justify-content: right;
+    column-gap: 0.5rem;
+}
+
+.list-blue-button,
+.list-red-button {
     color: white;
     border: none;
     border-radius: 5px;
     padding: 5px 10px;
     cursor: pointer;
+}
+
+.list-blue-button {
+  background-color: #3498db;
+}
+
+.list-blue-button:hover {
+  background-color: #2980b9;
+}
+
+.list-red-button {
+  background-color: #e74c3c;
+}
+
+.list-red-button:hover {
+  background-color: #c0392b;
 }
 
 .movie-list {
