@@ -11,7 +11,6 @@ using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
 using System.Text;
 using cse325_team7_project.Domain.Enums;
-using cse325_team7_project.Api.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 

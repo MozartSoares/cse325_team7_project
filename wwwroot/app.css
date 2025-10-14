@@ -108,3 +108,11 @@ a.navLink {
     width: 100%;
 
 }
+
+.form-group {
+    margin-bottom: 1rem; 
+}
+
+.form-group label {
+    font-weight: bold; 
+}

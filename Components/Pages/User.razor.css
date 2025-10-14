@@ -103,6 +103,17 @@
   background-color: #c0392b;
 }
 
+.list-header-container {
+  display: flex;
+  column-gap: 1rem;
+  align-items: center;
+  padding: 1rem;
+}
+
+.list-header-container h2 {
+    margin: 0px;
+}
+
 .movie-lists-container {
   background-color: #f9f9f9;
   border: solid 1px gray;
