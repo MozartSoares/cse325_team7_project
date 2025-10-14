@@ -1,11 +1,6 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using cse325_team7_project.Api.Common;
 using cse325_team7_project.Api.DTOs;
 using cse325_team7_project.Api.Mappings;
 using cse325_team7_project.Api.Services.Interfaces;
-using cse325_team7_project.Domain.Enums;
-using cse325_team7_project.Api.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
@@ -36,8 +31,6 @@ public class UsersController(IUserService service, IAuthService auth) : Controll
     {
         var result = await _auth.Register(dto.Username, dto.Name, dto.Email, dto.Password);
         var created = result.User;
-        created.Role = dto.Role;
-        created = await _service.Update(created.Id, created);
         return CreatedAtAction(nameof(GetById), new { id = created.Id.ToString() }, created.ToDto());
     }
 

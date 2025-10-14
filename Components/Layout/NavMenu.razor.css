@@ -103,21 +103,6 @@ a.navLink {
     border-color: #ff2e2e;
 }
 
-.user-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    padding: 4px 10px 4px 4px;
-    border-radius: 9999px;
-    text-decoration: none !important;
-    color: #ffffff;
-    transition: background-color 0.2s ease;
-}
-
-.user-pill:hover {
-    background-color: rgba(255, 255, 255, 0.12);
-}
-
 .avatar-circle {
     width: 38px;
     height: 38px;
@@ -135,4 +120,76 @@ a.navLink {
 .user-name {
     font-size: 0.9rem;
     font-weight: 500;
+}
+
+.user-menu {
+    position: relative;
+    display: flex;
+    align-items: center;
+    outline: none;
+}
+
+.user-menu-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 12px 4px 6px;
+    border-radius: 9999px;
+    background-color: transparent;
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.user-menu-button:hover,
+.user-menu-button:focus-visible {
+    background-color: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.user-menu-button .chevron {
+    font-size: 0.75rem;
+    margin-left: 4px;
+}
+
+.user-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    min-width: 160px;
+    background: rgba(18, 18, 18, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+    display: flex;
+    flex-direction: column;
+    padding: 6px 0;
+    z-index: 1000;
+}
+
+.user-dropdown-item {
+    background: none;
+    border: none;
+    color: #ffffff;
+    text-align: left;
+    padding: 10px 14px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.user-dropdown-item:hover,
+.user-dropdown-item:focus-visible {
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+.user-dropdown-item.logout {
+    color: #ff6b6b;
+}
+
+.user-dropdown-item.logout:hover,
+.user-dropdown-item.logout:focus-visible {
+    background-color: rgba(255, 107, 107, 0.12);
+    color: #ff8383;
 }

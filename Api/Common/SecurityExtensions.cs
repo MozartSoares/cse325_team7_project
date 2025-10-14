@@ -26,7 +26,10 @@ public static class SecurityExtensions
     }
 
     public static bool IsAdmin(this ClaimsPrincipal principal)
-        => principal.IsInRole(nameof(UserRole.Admin));
+        => principal.IsInRole(nameof(UserRole.Admin))
+           || principal.Claims.Any(c =>
+               (c.Type == ClaimTypes.Role || c.Type == "role") &&
+               string.Equals(c.Value, nameof(UserRole.Admin), StringComparison.OrdinalIgnoreCase));
 
     public static bool IsSelfOrAdmin(this ClaimsPrincipal principal, ObjectId targetUserId)
     {
@@ -42,4 +45,3 @@ public static class SecurityExtensions
         return owner.Lists.Contains(listId);
     }
 }
-

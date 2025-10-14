@@ -12,6 +12,10 @@ public record AuthLoginDto(
     string Password
 );
 
+public record AuthRefreshDto(
+    string AccessToken
+);
+
 public record AuthResponseDto(
     string AccessToken,
     DateTime ExpiresAt,
