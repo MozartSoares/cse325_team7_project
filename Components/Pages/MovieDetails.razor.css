@@ -133,12 +133,18 @@
   .movie-details-meta {
     font-size: 0.95rem;
   }
+
+  .detail-action-buttons {
+    flex-direction: column;
+    justify-content: center;
+  }
 }
 
 .detail-action-buttons {
     display: flex;
-    justify-content: space-around;
-    column-gap: 0.5rem;
+    justify-content: left;
+    margin-top: 10px;
+    gap: 0.5rem;
 }
 
 .detail-blue-button,

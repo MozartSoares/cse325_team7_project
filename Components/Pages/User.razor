@@ -115,6 +115,17 @@
                     <InputText @bind-Value="newMovieList.Title" class="form-control" />
                     <ValidationMessage For="@(() => newMovieList.Title)" />
                 </div>
+                <div class="form-group">
+                    <label for="movieSelector">Select a List</label>
+                    <select id="movieSelector" @bind="@selectedMovieId" class="form-control" required>
+                        <option value="">-- Select a movie --</option>
+                        @foreach (var movie in movies)
+                        {
+                            <option value="@movie.Id">@movie.Title</option>
+                        }
+                    </select>
+                    <ValidationMessage For="@(() => selectedMovieId)" />
+                </div>
                 <button type="submit" class="btn btn-primary">Create</button>
             </EditForm>
         </Modal>
@@ -141,6 +152,8 @@
     private bool isChanged = true;
 
     private MoviesListCreateDto newMovieList = new();
+    private List<MovieResponseDto> movies = new();
+    private string selectedMovieId = string.Empty;
 
     /// <summary>
     /// Fetches user data from the API when the component initializes.
@@ -185,6 +198,8 @@
     {
         return string.IsNullOrWhiteSpace(username) ? string.Empty : username[0].ToString().ToUpper();
     }
+
+    private List<MovieResponseDto> GetPlaceholderMovies() => MockData.GetPlaceholderMovies();
 
     @* User Edit Form *@
     private bool userModalVisible = false;
@@ -250,11 +265,61 @@
 
     @* Add List Form *@
     private bool addListModalVisible = false;
-    private void ShowAddModal() => addListModalVisible = true;
+    private async Task ShowAddModal()
+    { 
+        addListModalVisible = true;
+        try
+        {
+            var response = await HttpClient.GetAsync(Nav.ToAbsoluteUri("api/movies"));
+
+            if (response.IsSuccessStatusCode)
+            {
+                var data = await response.Content.ReadFromJsonAsync<List<MovieResponseDto>>();
+
+                // Check if data is not null and has any items
+                if (data != null && data.Any())
+                {
+                    movies = data;
+                }
+                else
+                {
+                    Console.WriteLine("No movies found.");
+                    movies = GetPlaceholderMovies();
+                }
+            }
+            else
+            {
+                Console.WriteLine($"Error: {response.StatusCode}");
+                movies = GetPlaceholderMovies();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading movie lists: {ex.Message}");
+            movies = GetPlaceholderMovies();
+        }
+    }
+
     private void CloseAddModal() => addListModalVisible = false;
 
     private async Task HandleAddListSubmit()
-    {
+    {   
+        if (string.IsNullOrEmpty(selectedMovieId))
+        {
+            Console.WriteLine("No movie selected.");
+            CloseAddModal();
+            return;
+        }
+
+        if (newMovieList.Movies != null)
+        {
+            newMovieList.Movies.Add(selectedMovieId);
+        }
+        else
+        {
+            newMovieList.Movies = new List<string> { selectedMovieId };
+        }
+
         try
         {
             Console.WriteLine($"Adding list {newMovieList.Title}");
