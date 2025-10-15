@@ -241,7 +241,7 @@
     color: #888;
 }
 
-.movie-cards > .btn {
+.movie-cards > .movies-secondary-btn {
     grid-column: 1 / -1;
     justify-self: center;
     margin-top: 20px;
@@ -453,29 +453,32 @@ ination Styles */
 }
 
 .pagination-btn {
-    padding: 8px 12px;
-    border: 1px solid #ddd;
-    background: white;
-    color: #333;
-    border-radius: 6px;
+    padding: 0.55rem 0.95rem;
+    border: 1px solid rgba(47, 56, 68, 0.18);
+    background: #ffffff;
+    color: #2f3844;
+    border-radius: 999px;
     cursor: pointer;
     font-size: 0.9rem;
     transition: all 0.2s ease;
-    min-width: 40px;
+    min-width: 44px;
+    font-weight: 600;
 }
 
 .pagination-btn:hover:not(:disabled) {
-    background: #e71621;
+    background: linear-gradient(120deg, #d31024 0%, #ff4b5c 100%);
     color: white;
-    border-color: #e71621;
+    border-color: transparent;
     transform: translateY(-2px);
+    box-shadow: 0 10px 18px -16px rgba(211, 16, 36, 0.75);
 }
 
 .pagination-btn.active {
-    background: #e71621;
+    background: linear-gradient(120deg, #d31024 0%, #ff4b5c 100%);
     color: white;
-    border-color: #e71621;
+    border-color: transparent;
     font-weight: bold;
+    box-shadow: 0 12px 20px -14px rgba(211, 16, 36, 0.85);
 }
 
 .pagination-btn:disabled {
@@ -572,15 +575,40 @@ ination Styles */
 }
 
 .filter-btn {
-    padding: 0.45rem 1.1rem;
+    padding: 0.55rem 1.4rem;
     white-space: nowrap;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
+    border-radius: 999px;
+    background: linear-gradient(120deg, #d31024 0%, #ff4b5c 100%);
+    border: none;
+    color: #ffffff;
+    font-weight: 600;
+    box-shadow: 0 12px 24px -18px rgba(211, 16, 36, 0.75);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.filter-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 30px -18px rgba(211, 16, 36, 0.85);
+    filter: brightness(1.05);
 }
 
 .clear-filter-btn {
-    padding: 0.45rem 0.95rem;
+    padding: 0.55rem 1.2rem;
     white-space: nowrap;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
+    border-radius: 999px;
+    border: 1px solid rgba(47, 56, 68, 0.18);
+    background: #ffffff;
+    color: #2f3844;
+    font-weight: 600;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.clear-filter-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 22px -20px rgba(47, 56, 68, 0.6);
+    background: rgba(47, 56, 68, 0.08);
 }
 
 /* Responsive design for advanced filter */
@@ -628,4 +656,48 @@ ination Styles */
         font-size: 0.85rem;
         padding: 0.4rem 1rem;
     }
+}
+.movies-primary-btn {
+    padding: 0.55rem 1.5rem;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    background: linear-gradient(120deg, #d31024 0%, #ff4b5c 100%);
+    color: #fff;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+    cursor: pointer;
+}
+
+.movies-primary-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 28px -18px rgba(211, 16, 36, 0.8);
+    filter: brightness(1.05);
+}
+
+.movies-secondary-btn {
+    padding: 0.55rem 1.25rem;
+    border-radius: 999px;
+    border: 1px solid rgba(47, 56, 68, 0.18);
+    background: #ffffff;
+    color: #2f3844;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    cursor: pointer;
+}
+
+.movies-secondary-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px -20px rgba(47, 56, 68, 0.6);
+    background: rgba(47, 56, 68, 0.08);
+}
+.movies-primary-btn,
+.movies-secondary-btn {
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    text-decoration: none;
 }

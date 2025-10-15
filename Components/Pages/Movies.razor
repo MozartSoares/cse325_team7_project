@@ -46,10 +46,10 @@
             <input type="date" id="endDate" @bind="endDate" class="filter-input" />
         </div>
     </div>
-    <button class="btn btn-primary filter-btn" @onclick="ApplyFilters">Apply Filters</button>
+    <button class="movies-primary-btn" @onclick="ApplyFilters">Apply Filters</button>
     @if (isFilterActive)
     {
-        <button class="btn btn-secondary clear-filter-btn" @onclick="ClearFilters">Clear Filters</button>
+        <button class="movies-secondary-btn" @onclick="ClearFilters">Clear Filters</button>
     }
 </div>
 
@@ -108,7 +108,7 @@
                 <li>Use filters for genre, budget, and release dates</li>
             </ul>
         </div>
-        <button class="btn btn-secondary" @onclick="ClearSearch">Show All Movies</button>
+        <button class="movies-secondary-btn" @onclick="ClearSearch">Show All Movies</button>
     }
     else
     {

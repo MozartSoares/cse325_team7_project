@@ -13,7 +13,7 @@ API ──► DTOs ↔ Mapping Extensions
         ↓
  Controllers (thin HTTP endpoints)
         ↓
- Middleware / Model Binders (cross‑cutting concerns)
+ Middleware / Model Binders (cross-cutting concerns)
 ```
 
 The goal is to keep controllers thin, concentrate business logic inside services, and treat MongoDB infrastructure as an implementation detail hidden behind the service layer. Cross-cutting aspects such as error handling and ObjectId parsing live in dedicated components.
@@ -57,13 +57,19 @@ REST endpoints are exposed via:
 
 Actions accept DTOs, delegate to services, and return DTOs. They do not contain manual validations or try/catch blocks thanks to the shared middleware and binder.
 
-## Authentication/Authorization
+## Authentication & Authorization
 
 JWT Bearer authentication is configured and integrated into the pipeline. Authentication endpoints:
 
 - `POST /api/auth/register` (anonymous): Creates a user (default role is `User`) and returns a JWT plus its expiration.
 - `POST /api/auth/login` (anonymous): Authenticates a user and returns a JWT plus its expiration.
 - `GET /api/auth/me` (authenticated): Returns the user associated with the provided token.
+- `POST /api/auth/refresh` (anonymous): Exchanges an about-to-expire access token for a fresh one. The action validates the token signature but ignores expiration.
+
+Additional admin-only workflows:
+
+- `POST /api/users` (requires `AdminOnly` policy): Allows an administrator to create additional users by supplying `UserCreateAdminDto`. The request can specify a target role (`User` or `Admin`).
+- All movie and movie-list management endpoints (`POST/PUT/DELETE`) require the caller to be an administrator; read operations stay anonymous.
 
 ### Error Handling & Binding
 
@@ -73,7 +79,7 @@ JWT Bearer authentication is configured and integrated into the pipeline. Authen
 
 ## Dependency Injection & Configuration (`Program.cs`)
 
-- Registers Razor components (existing Blazor UI).
+- Registers Razor components (existing Blazor UI) so the server-side front end remains functional beside the API.
 - Adds controllers and inserts the custom ObjectId binder.
 - Wires MongoDB dependencies:
   - `IMongoClient` uses connection string `Mongo:ConnectionString` (default `mongodb://localhost:27017`).
@@ -82,8 +88,8 @@ JWT Bearer authentication is configured and integrated into the pipeline. Authen
 - Registers scoped services for each aggregate (`MovieService`, `UserService`, `MoviesListService`).
 - Adds `ErrorHandlingMiddleware` before antiforgery/static assets so every request benefits from consistent error responses.
 - Maps controllers and keeps the existing Blazor pipeline intact.
-- Habilita autenticação/autorização (`UseAuthentication`/`UseAuthorization`) e configura JWT.
-- Cria índices únicos (case-insensitive) em `users.username` e `users.email` no startup.
+- Enables authentication/authorization (`UseAuthentication` / `UseAuthorization`) and configures JWT options via configuration or secrets.
+- Creates case-insensitive unique indexes on `users.username` and `users.email` during startup (best effort — failures are swallowed).
 
 ## Error Responses
 
@@ -126,15 +132,23 @@ JWT Bearer authentication is configured and integrated into the pipeline. Authen
 3. Run: `dotnet run` (API available at `https://localhost:5001`, UI at the root).
 4. Test endpoints with cURL/Postman using the DTO shapes defined in `/Api/DTOs`.
 
+### Container image
+
+A multi-stage `Dockerfile` lives at the repository root. Publishing the image produces a self-contained ASP.NET runtime image that honors the `$PORT` environment variable (required for Render deployment). Example:
+
+```bash
+docker build -t moviehub-backend .
+docker run --rm -it -e PORT=8080 -p 8080:8080 moviehub-backend
+```
+
 ### Indexes
 
-No startup são criados índices únicos para reforçar unicidade: `users.username` e `users.email` (collation com `strength=2` para case-insensitive).
+During startup unique indexes are created for `users.username` and `users.email` with collation `strength = 2` to keep comparisons case-insensitive.
 
-## Recent Changes (Commits `6e900bf` and `a8c55c5`)
+## Notable Implementation Details
 
-- Introduced the domain model (movies, users, lists, shared enums/value objects) with UTC timestamps and BSON serialization helpers.
-- Created API layer with DTOs, mapping extensions, Mongo-backed services, and REST controllers.
-- Added custom ObjectId binder, unified exception hierarchy, and global error-handling middleware for consistent JSON responses.
-- Wired MongoDB dependencies and controller routing in `Program.cs`.
+- **Role-aware registration** – `AuthService.Register` accepts an optional `UserRole` parameter. Regular signup calls set it to `User`, while the admin-only `/api/users` pipeline can create new administrators.
+- **Token refresh** – `AuthTokenHandler` in the front end leverages the `/api/auth/refresh` endpoint, which in turn rehydrates the principal and issues a new token without forcing a logout.
+- **Central error contracts** – All services throw `HttpException` derivations so the API surface always responds with `{ "message": "..." }`, easing front-end error handling.
 
 This document should give new contributors enough context to navigate the backend architecture quickly.
