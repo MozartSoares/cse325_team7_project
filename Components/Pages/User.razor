@@ -8,6 +8,8 @@
 @inject NavigationManager Nav
 @inject AuthStateService AuthState
 
+<PageTitle>@pageTitle</PageTitle>
+
 <div class="user-detail-container">
     <h1>Profile Details</h1>
 
@@ -177,6 +179,7 @@
     private MoviesListCreateDto newMovieList = new();
     private bool adminRegisterModalVisible;
     private string? adminRegistrationSuccessMessage;
+    private string pageTitle = "Profile";
 
     private bool IsAdmin => AuthState.CurrentUser?.Role == UserRole.Admin;
     private bool IsSelf => AuthState.CurrentUser?.Id == userData?.Id;
@@ -231,6 +234,11 @@
             userUpdateDto = new UserUpdateDto { Name = userData.Name, Email = userData.Email };
             editContext = new EditContext(userUpdateDto);
             editContext.OnFieldChanged += (sender, eventArgs) => isChanged = false;
+            pageTitle = FormatProfileTitle(userData);
+        }
+        else
+        {
+            pageTitle = "Profile Not Found";
         }
     }
 
@@ -285,6 +293,10 @@
                 if (IsSelf && userData is not null)
                 {
                     await AuthState.UpdateUserAsync(userData);
+                }
+                if (userData is not null)
+                {
+                    pageTitle = FormatProfileTitle(userData);
                 }
                 CloseUserModal();
                 await InvokeAsync(StateHasChanged);
@@ -434,11 +446,19 @@
             adminRegisterModalVisible = false;
             adminRegistrationSuccessMessage = null;
         }
+        pageTitle = FormatProfileTitle(userData);
         _ = InvokeAsync(StateHasChanged);
     }
 
     public void Dispose()
     {
         AuthState.AuthStateChanged -= HandleAuthStateChanged;
+    }
+
+    private static string FormatProfileTitle(UserResponseDto? user)
+    {
+        if (user is null) return "Profile";
+        var nameOrUsername = string.IsNullOrWhiteSpace(user.Name) ? user.Username : user.Name;
+        return string.IsNullOrWhiteSpace(nameOrUsername) ? "Profile" : $"{nameOrUsername}'s Profile";
     }
 }

@@ -5,6 +5,7 @@
 @inject HttpClient Http
 @inject NavigationManager Nav
 
+<PageTitle>@pageTitle</PageTitle>
 
 <h1 class="movie-label">Movies @(isUsingPlaceholderData ? "(Demo Data)" : "")</h1>
 
@@ -173,6 +174,7 @@
     List<MovieResponseDto>? MoviesList = new();
     List<MovieResponseDto>? AllMovies = new();
     private bool isUsingPlaceholderData = false;
+    private string pageTitle = "Browse Movies";
     private string searchTerm = "";
     
     // Advanced filter properties

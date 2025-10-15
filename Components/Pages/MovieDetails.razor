@@ -10,6 +10,8 @@
 @inject NavigationManager Nav
 @inject AuthStateService AuthState
 
+<PageTitle>@pageTitle</PageTitle>
+
 <div class="movie-details-container">
     @if (!loadAttempted)
     {
@@ -219,6 +221,7 @@
     private MovieResponseDto? Movie;
     private bool isUsingPlaceholderData = false;
     private bool loadAttempted = false;
+    private string pageTitle = "Movie Details";
 
     private MovieUpdateDto? movieUpdateDto;
 
@@ -257,10 +260,11 @@
             if (Movie != null)
             {
                 isUsingPlaceholderData = true;
-                
             }
         }
-        if (Movie != null ) {
+        if (Movie != null )
+        {
+            pageTitle = $"{Movie.Title} | Movie Details";
             movieUpdateDto = new MovieUpdateDto {
                 Title = Movie.Title,
                 ReleaseDate = Movie.ReleaseDate,
@@ -274,6 +278,10 @@
             };
             editContext = new EditContext(movieUpdateDto);
             editContext.OnFieldChanged += (sender, eventArgs) => isChanged = false;
+        }
+        else
+        {
+            pageTitle = "Movie Not Found";
         }
 
         loadAttempted = true;

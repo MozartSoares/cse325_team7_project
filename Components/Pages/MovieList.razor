@@ -4,6 +4,8 @@
 @using cse325_team7_project.Api.DTOs
 @using cse325_team7_project.Domain.Enums
 
+<PageTitle>@pageTitle</PageTitle>
+
 <div class="list-page-container">
     <h1>Movie List</h1>
 
@@ -55,4 +57,17 @@
     string.IsNullOrEmpty(Ids)
     ? new List<string>()
     : Ids.Split('/').Where(x => !string.IsNullOrEmpty(x)).ToList();
+
+    private string pageTitle = "Movie Lists";
+
+    protected override void OnParametersSet()
+    {
+        var count = IdList.Count;
+        pageTitle = count switch
+        {
+            0 => "Movie Lists",
+            1 => "Movie List",
+            _ => $"Movie Lists ({count})"
+        };
+    }
 }
