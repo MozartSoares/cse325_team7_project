@@ -196,6 +196,11 @@
 
         try
         {
+            if (!await AuthState.ApplyAuthorizationAsync(HttpClient))
+            {
+                CloseDeleteModal();
+                return;
+            }
             Console.WriteLine($"Deleting list {movieList?.Title}");
             var response = await HttpClient.DeleteAsync(Nav.ToAbsoluteUri($"api/lists/{movieList?.Id}"));
 
@@ -259,6 +264,11 @@
 
         try
         {
+            if (!await AuthState.ApplyAuthorizationAsync(HttpClient))
+            {
+                CloseEditModal();
+                return;
+            }
             Console.WriteLine($"Updating list {movieList?.Title}");
             var response = await HttpClient.PutAsJsonAsync(Nav.ToAbsoluteUri($"api/lists/{movieList?.Id}"), listUpdateDto);
 
@@ -270,6 +280,7 @@
                     listUpdateDto.Title = movieList.Title;
                     listUpdateDto.Movies = movieList.Movies;
                 }
+                await InvokeAsync(StateHasChanged);
             }
             else
             {
@@ -296,6 +307,10 @@
 
         try
         {
+            if (!await AuthState.ApplyAuthorizationAsync(HttpClient))
+            {
+                return;
+            }
             var update = new MoviesListUpdateDto
             {
                 Title = movieList.Title,
