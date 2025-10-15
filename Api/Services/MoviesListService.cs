@@ -37,6 +37,7 @@ public class MoviesListService(IMongoCollection<MoviesList> lists, IMongoCollect
         await _lists.InsertOneAsync(list);
         var owner = await _users.Find(u => u.Id == ownerId).FirstOrDefaultAsync() ?? throw new NotFoundException($"Owner {ownerId} not found");
         owner.Lists.Add(list.Id);
+        owner.UpdatedAt = DateTime.UtcNow;
         await _users.ReplaceOneAsync(u => u.Id == ownerId, owner);
         return list;
     }
@@ -60,7 +61,16 @@ public class MoviesListService(IMongoCollection<MoviesList> lists, IMongoCollect
     public async Task<bool> Delete(ObjectId id)
     {
         var result = await _lists.DeleteOneAsync(l => l.Id == id);
-        return result.DeletedCount > 0;
+        if (result.DeletedCount == 0)
+        {
+            return false;
+        }
+
+        var filter = Builders<User>.Filter.AnyEq(u => u.Lists, id);
+        var update = Builders<User>.Update.Pull(u => u.Lists, id).Set(u => u.UpdatedAt, DateTime.UtcNow);
+        await _users.UpdateManyAsync(filter, update);
+
+        return true;
     }
 
     /// <summary>

@@ -186,7 +186,7 @@
     private bool CanManageProfile => IsAdmin || IsSelf;
     private bool CanAddList => AuthState.IsAuthenticated && IsSelf;
 
-    private void HandleListDeleted(string id)
+    private async Task HandleListDeleted(string id)
     {
         if (userData?.Lists is null)
         {
@@ -195,7 +195,14 @@
 
         // Remove the list id locally to update UI instantly
         userData = userData with { Lists = userData.Lists.Where(x => x != id).ToList() };
-        _ = InvokeAsync(StateHasChanged);
+        pageTitle = FormatProfileTitle(userData);
+
+        if (IsSelf && userData is not null)
+        {
+            await AuthState.UpdateUserAsync(userData);
+        }
+
+        await InvokeAsync(StateHasChanged);
     }
 
     protected override void OnInitialized()
@@ -235,6 +242,10 @@
             editContext = new EditContext(userUpdateDto);
             editContext.OnFieldChanged += (sender, eventArgs) => isChanged = false;
             pageTitle = FormatProfileTitle(userData);
+            if (IsSelf)
+            {
+                await AuthState.UpdateUserAsync(userData);
+            }
         }
         else
         {

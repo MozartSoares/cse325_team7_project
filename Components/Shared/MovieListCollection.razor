@@ -206,6 +206,18 @@
                 {
                     await OnDeleted.InvokeAsync(movieListId);
                 }
+
+                if (CanManageList && AuthState.CurrentUser is not null && !string.IsNullOrWhiteSpace(movieListId))
+                {
+                    var updatedLists = (AuthState.CurrentUser.Lists ?? new List<string>())
+                        .Where(x => x != movieListId)
+                        .ToList();
+                    var updatedUser = AuthState.CurrentUser with
+                    {
+                        Lists = updatedLists
+                    };
+                    await AuthState.UpdateUserAsync(updatedUser);
+                }
                 StateHasChanged();
             }
             else
